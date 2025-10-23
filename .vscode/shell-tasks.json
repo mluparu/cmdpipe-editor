@@ -1,0 +1,177 @@
+{
+  "version": "1.0.0",
+  "tasks": [
+    {
+      "id": "hello-world",
+      "name": "Hello World",
+      "description": "Simple hello world command to test the extension",
+      "command": "echo",
+      "args": ["Hello from Shell Task Pipe!"],
+      "category": "utility",
+      "timeout": 5000,
+      "tags": ["demo", "hello", "test"]
+    },
+    {
+      "id": "current-directory",
+      "name": "Current Directory",
+      "description": "Show the current working directory",
+      "command": "pwd",
+      "category": "file-system",
+      "timeout": 3000,
+      "platforms": ["darwin", "linux"],
+      "tags": ["directory", "path"]
+    },
+    {
+      "id": "current-directory-windows",
+      "name": "Current Directory (Windows)",
+      "description": "Show the current working directory on Windows",
+      "command": "cd",
+      "category": "file-system",
+      "timeout": 3000,
+      "platforms": ["win32"],
+      "tags": ["directory", "path", "windows"]
+    },
+    {
+      "id": "list-files",
+      "name": "List Files",
+      "description": "List files in the current directory",
+      "command": "ls",
+      "args": ["-la"],
+      "category": "file-system",
+      "timeout": 5000,
+      "platforms": ["darwin", "linux"],
+      "workingDirectory": "${workspaceFolder}",
+      "tags": ["files", "directory", "listing"]
+    },
+    {
+      "id": "list-files-windows",
+      "name": "List Files (Windows)",
+      "description": "List files in the current directory on Windows",
+      "command": "dir",
+      "args": ["/b"],
+      "category": "file-system",
+      "timeout": 5000,
+      "platforms": ["win32"],
+      "workingDirectory": "${workspaceFolder}",
+      "tags": ["files", "directory", "listing", "windows"]
+    },
+    {
+      "id": "git-status",
+      "name": "Git Status",
+      "description": "Show git repository status",
+      "command": "git",
+      "args": ["status", "--porcelain"],
+      "category": "development",
+      "timeout": 10000,
+      "workingDirectory": "${workspaceFolder}",
+      "tags": ["git", "version-control", "status"]
+    },
+    {
+      "id": "git-branch",
+      "name": "Git Current Branch",
+      "description": "Show the current git branch",
+      "command": "git",
+      "args": ["branch", "--show-current"],
+      "category": "development",
+      "timeout": 5000,
+      "workingDirectory": "${workspaceFolder}",
+      "tags": ["git", "version-control", "branch"]
+    },
+    {
+      "id": "node-version",
+      "name": "Node.js Version",
+      "description": "Show the installed Node.js version",
+      "command": "node",
+      "args": ["--version"],
+      "category": "development",
+      "timeout": 3000,
+      "tags": ["nodejs", "version", "development"]
+    },
+    {
+      "id": "npm-list",
+      "name": "NPM Dependencies",
+      "description": "List npm dependencies in the current project",
+      "command": "npm",
+      "args": ["list", "--depth=0"],
+      "category": "development",
+      "timeout": 15000,
+      "workingDirectory": "${workspaceFolder}",
+      "tags": ["npm", "dependencies", "nodejs"]
+    },
+    {
+      "id": "system-info",
+      "name": "System Information",
+      "description": "Display basic system information",
+      "command": "uname",
+      "args": ["-a"],
+      "category": "system",
+      "timeout": 5000,
+      "platforms": ["darwin", "linux"],
+      "tags": ["system", "info", "platform"]
+    },
+    {
+      "id": "system-info-windows",
+      "name": "System Information (Windows)",
+      "description": "Display basic system information on Windows",
+      "command": "systeminfo",
+      "category": "system",
+      "timeout": 10000,
+      "platforms": ["win32"],
+      "tags": ["system", "info", "platform", "windows"]
+    },
+    {
+      "id": "disk-usage",
+      "name": "Disk Usage",
+      "description": "Show disk usage information",
+      "command": "df",
+      "args": ["-h"],
+      "category": "system",
+      "timeout": 5000,
+      "platforms": ["darwin", "linux"],
+      "tags": ["disk", "usage", "space"]
+    },
+    {
+      "id": "memory-usage",
+      "name": "Memory Usage",
+      "description": "Show memory usage information",
+      "command": "free",
+      "args": ["-h"],
+      "category": "system",
+      "timeout": 5000,
+      "platforms": ["linux"],
+      "tags": ["memory", "usage", "ram"]
+    },
+    {
+      "id": "network-interfaces",
+      "name": "Network Interfaces",
+      "description": "List network interfaces",
+      "command": "ifconfig",
+      "category": "network",
+      "timeout": 5000,
+      "platforms": ["darwin", "linux"],
+      "tags": ["network", "interfaces", "ip"]
+    },
+    {
+      "id": "ping-google",
+      "name": "Ping Google",
+      "description": "Test network connectivity by pinging Google DNS",
+      "command": "ping",
+      "args": ["-c", "3", "8.8.8.8"],
+      "category": "network",
+      "timeout": 15000,
+      "platforms": ["darwin", "linux"],
+      "tags": ["network", "ping", "connectivity"]
+    },
+    {
+      "id": "ping-google-windows",
+      "name": "Ping Google (Windows)",
+      "description": "Test network connectivity by pinging Google DNS on Windows",
+      "command": "ping",
+      "args": ["-n", "3", "8.8.8.8"],
+      "category": "network",
+      "timeout": 15000,
+      "platforms": ["win32"],
+      "tags": ["network", "ping", "connectivity", "windows"]
+    }
+  ]
+}

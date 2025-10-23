@@ -1,0 +1,190 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Shell Task Pipe Configuration Schema",
+  "description": "Schema for validating shell task configuration files",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": "string",
+      "description": "Configuration schema version",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+      "default": "1.0.0"
+    },
+    "defaultTimeout": {
+      "type": "integer",
+      "description": "Default timeout in milliseconds for task execution",
+      "minimum": 1000,
+      "maximum": 300000,
+      "default": 30000
+    },
+    "tasks": {
+      "type": "array",
+      "description": "Array of shell task definitions",
+      "items": {
+        "$ref": "#/definitions/TaskDefinition"
+      },
+      "minItems": 0
+    },
+    "globalSettings": {
+      "type": "object",
+      "description": "Global settings for task execution",
+      "properties": {
+        "workingDirectory": {
+          "type": "string",
+          "description": "Default working directory for task execution"
+        },
+        "environmentVariables": {
+          "type": "object",
+          "description": "Environment variables to set for all tasks",
+          "patternProperties": {
+            "^[A-Z_][A-Z0-9_]*$": {
+              "type": "string"
+            }
+          }
+        },
+        "outputEncoding": {
+          "type": "string",
+          "description": "Character encoding for command output",
+          "enum": ["utf8", "utf16le", "ascii", "latin1"],
+          "default": "utf8"
+        },
+        "insertionMode": {
+          "type": "string",
+          "description": "How to handle output insertion",
+          "enum": ["replace-selection", "insert-at-cursor", "append-line"],
+          "default": "insert-at-cursor"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "definitions": {
+    "TaskDefinition": {
+      "type": "object",
+      "description": "Definition of a single shell task",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the task",
+          "pattern": "^[a-zA-Z][a-zA-Z0-9._-]*$",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "name": {
+          "type": "string",
+          "description": "Display name for the task",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of what the task does",
+          "maxLength": 500
+        },
+        "command": {
+          "type": "string",
+          "description": "Shell command to execute",
+          "minLength": 1
+        },
+        "args": {
+          "type": "array",
+          "description": "Command line arguments",
+          "items": {
+            "type": "string"
+          }
+        },
+        "workingDirectory": {
+          "type": "string",
+          "description": "Working directory for this specific task"
+        },
+        "timeout": {
+          "type": "integer",
+          "description": "Timeout in milliseconds for this task",
+          "minimum": 1000,
+          "maximum": 300000
+        },
+        "platforms": {
+          "type": "array",
+          "description": "Platforms this task is compatible with",
+          "items": {
+            "type": "string",
+            "enum": ["windows", "macos", "linux"]
+          },
+          "uniqueItems": true,
+          "default": ["windows", "macos", "linux"]
+        },
+        "shell": {
+          "type": "object",
+          "description": "Shell-specific configuration",
+          "properties": {
+            "executable": {
+              "type": "string",
+              "description": "Custom shell executable path"
+            },
+            "args": {
+              "type": "array",
+              "description": "Custom shell arguments",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "environmentVariables": {
+          "type": "object",
+          "description": "Environment variables for this task",
+          "patternProperties": {
+            "^[A-Z_][A-Z0-9_]*$": {
+              "type": "string"
+            }
+          }
+        },
+        "outputProcessing": {
+          "type": "object",
+          "description": "Output processing options",
+          "properties": {
+            "trimWhitespace": {
+              "type": "boolean",
+              "description": "Whether to trim leading/trailing whitespace",
+              "default": true
+            },
+            "encoding": {
+              "type": "string",
+              "description": "Character encoding for this task's output",
+              "enum": ["utf8", "utf16le", "ascii", "latin1"],
+              "default": "utf8"
+            },
+            "maxOutputLength": {
+              "type": "integer",
+              "description": "Maximum length of output to capture",
+              "minimum": 100,
+              "maximum": 1048576,
+              "default": 65536
+            }
+          },
+          "additionalProperties": false
+        },
+        "keybinding": {
+          "type": "string",
+          "description": "Optional keyboard shortcut for the task",
+          "pattern": "^(ctrl|cmd|alt|shift)\\+[a-zA-Z0-9]$"
+        },
+        "category": {
+          "type": "string",
+          "description": "Category for organizing tasks in command palette",
+          "maxLength": 50
+        },
+        "icon": {
+          "type": "string",
+          "description": "VSCode icon identifier for the task",
+          "pattern": "^[a-zA-Z-]+$"
+        }
+      },
+      "required": ["id", "name", "command"],
+      "additionalProperties": false
+    }
+  },
+  "required": ["version", "tasks"],
+  "additionalProperties": false
+}

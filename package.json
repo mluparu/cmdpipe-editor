@@ -1,0 +1,236 @@
+{
+  "name": "shell-task-pipe",
+  "displayName": "Shell Task Pipe",
+  "description": "Run arbitrary shell tasks and pipe their outputs directly into the editor at cursor position",
+  "version": "0.1.0",
+  "publisher": "Marian Luparu",
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "shell",
+    "tasks",
+    "command",
+    "automation",
+    "productivity"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "shellTaskPipe.runTask",
+        "title": "Run Shell Task",
+        "category": "Shell Task Pipe"
+      },
+      {
+        "command": "shellTaskPipe.runTaskAtCursor",
+        "title": "Run Shell Task at Cursor",
+        "category": "Shell Task Pipe"
+      },
+      {
+        "command": "shellTaskPipe.openConfig",
+        "title": "Open Configuration",
+        "category": "Shell Task Pipe"
+      },
+      {
+        "command": "shellTaskPipe.reloadConfig",
+        "title": "Reload Configuration",
+        "category": "Shell Task Pipe"
+      },
+      {
+        "command": "shellTaskPipe.showLogs",
+        "title": "Show Logs",
+        "category": "Shell Task Pipe"
+      },
+      {
+        "command": "shellTaskPipe.quickEcho",
+        "title": "Quick Echo",
+        "category": "Shell Task Pipe"
+      },
+      {
+        "command": "shellTaskPipe.quickCommand",
+        "title": "Quick Command",
+        "category": "Shell Task Pipe"
+      },
+      {
+        "command": "shellTaskPipe.executeSelection",
+        "title": "Execute Selection as Command",
+        "category": "Shell Task Pipe"
+      },
+      {
+        "command": "shellTaskPipe.insertDateTime",
+        "title": "Insert Date/Time",
+        "category": "Shell Task Pipe"
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "shellTaskPipe.runTask",
+          "when": "true"
+        },
+        {
+          "command": "shellTaskPipe.runTaskAtCursor",
+          "when": "editorTextFocus"
+        },
+        {
+          "command": "shellTaskPipe.openConfig",
+          "when": "true"
+        },
+        {
+          "command": "shellTaskPipe.reloadConfig",
+          "when": "true"
+        },
+        {
+          "command": "shellTaskPipe.showLogs",
+          "when": "true"
+        },
+        {
+          "command": "shellTaskPipe.quickEcho",
+          "when": "editorTextFocus"
+        },
+        {
+          "command": "shellTaskPipe.quickCommand",
+          "when": "editorTextFocus"
+        },
+        {
+          "command": "shellTaskPipe.executeSelection",
+          "when": "editorHasSelection"
+        },
+        {
+          "command": "shellTaskPipe.insertDateTime",
+          "when": "editorTextFocus"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "shellTaskPipe.runTaskAtCursor",
+          "when": "editorTextFocus",
+          "group": "shellTaskPipe@1"
+        },
+        {
+          "command": "shellTaskPipe.quickCommand",
+          "when": "editorTextFocus",
+          "group": "shellTaskPipe@2"
+        },
+        {
+          "command": "shellTaskPipe.executeSelection",
+          "when": "editorHasSelection",
+          "group": "shellTaskPipe@3"
+        },
+        {
+          "command": "shellTaskPipe.insertDateTime",
+          "when": "editorTextFocus",
+          "group": "shellTaskPipe@4"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Shell Task Pipe",
+      "properties": {
+        "shellTaskPipe.configFile": {
+          "type": "string",
+          "default": ".vscode/shell-tasks.json",
+          "description": "Path to the shell tasks configuration file relative to workspace root",
+          "scope": "resource"
+        },
+        "shellTaskPipe.timeout": {
+          "type": "number",
+          "default": 30000,
+          "minimum": 1000,
+          "maximum": 300000,
+          "description": "Default timeout for shell command execution in milliseconds",
+          "scope": "resource"
+        },
+        "shellTaskPipe.logLevel": {
+          "type": "string",
+          "enum": [
+            "debug",
+            "info",
+            "warn",
+            "error"
+          ],
+          "default": "info",
+          "description": "Logging level for the extension",
+          "scope": "window"
+        },
+        "shellTaskPipe.insertionMode": {
+          "type": "string",
+          "enum": [
+            "replace-selection",
+            "insert-at-cursor",
+            "append-line"
+          ],
+          "default": "insert-at-cursor",
+          "description": "How to handle output insertion in the editor",
+          "scope": "resource"
+        },
+        "shellTaskPipe.trimOutput": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether to trim whitespace from command output before insertion",
+          "scope": "resource"
+        },
+        "shellTaskPipe.showNotifications": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether to show notifications for task execution results",
+          "scope": "window"
+        },
+        "shellTaskPipe.maxOutputLength": {
+          "type": "number",
+          "default": 65536,
+          "minimum": 100,
+          "maximum": 1048576,
+          "description": "Maximum length of command output to capture and insert",
+          "scope": "resource"
+        },
+        "shellTaskPipe.autoReloadConfig": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether to automatically reload configuration when the config file changes",
+          "scope": "resource"
+        }
+      }
+    },
+    "jsonValidation": [
+      {
+        "fileMatch": "**/shell-tasks.json",
+        "url": "./src/config/schema.json"
+      },
+      {
+        "fileMatch": "**/.vscode/shell-tasks.json",
+        "url": "./src/config/schema.json"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "jest"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.74.0",
+    "@types/node": "18.x",
+    "@typescript-eslint/eslint-plugin": "^6.4.0",
+    "@typescript-eslint/parser": "^6.4.0",
+    "eslint": "^8.47.0",
+    "typescript": "^5.1.6",
+    "jest": "^29.6.0",
+    "@types/jest": "^29.5.0",
+    "ts-jest": "^29.1.0"
+  },
+  "dependencies": {
+    "chokidar": "^3.5.3",
+    "ajv": "^8.12.0"
+  }
+}
