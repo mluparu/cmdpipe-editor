@@ -34,7 +34,6 @@ export class QuickCommands {
      */
     public registerCommands(context: vscode.ExtensionContext): void {
         const commands = [
-            vscode.commands.registerCommand('shellTaskPipe.quickEcho', this.quickEcho.bind(this)),
             vscode.commands.registerCommand('shellTaskPipe.quickCommand', this.quickCommand.bind(this)),
             vscode.commands.registerCommand('shellTaskPipe.executeSelection', this.executeSelection.bind(this)),
             vscode.commands.registerCommand('shellTaskPipe.insertDateTime', this.insertDateTime.bind(this))
@@ -42,44 +41,6 @@ export class QuickCommands {
 
         commands.forEach(command => context.subscriptions.push(command));
         this.logger.info('Registered quick commands');
-    }
-
-    /**
-     * Quick echo command - prompts for text and echoes it
-     */
-    public async quickEcho(): Promise<void> {
-        try {
-            const text = await vscode.window.showInputBox({
-                prompt: 'Enter text to echo',
-                placeHolder: 'Hello World'
-            });
-
-            if (!text) {
-                return;
-            }
-
-            const editorInfo = this.cursorManager.getActiveEditor();
-            if (!editorInfo) {
-                vscode.window.showErrorMessage('No active editor found');
-                return;
-            }
-
-            const task: TaskDefinition = {
-                id: 'quick-echo',
-                name: 'Quick Echo',
-                command: 'echo',
-                args: [text],
-                outputProcessing: {
-                    trimWhitespace: true
-                }
-            };
-
-            await this.executeQuickTask(task, editorInfo);
-
-        } catch (error) {
-            this.logger.error('Quick echo failed', error as Error);
-            vscode.window.showErrorMessage('Quick echo failed');
-        }
     }
 
     /**
@@ -129,7 +90,7 @@ export class QuickCommands {
     /**
      * Execute selected text as a shell command
      */
-    public async executeSelection(): Promise<void> {
+    public async executeSelection(insertionMode?: string): Promise<void> {
         try {
             const editorInfo = this.cursorManager.getActiveEditor();
             if (!editorInfo) {
@@ -159,26 +120,50 @@ export class QuickCommands {
                 }
             };
 
-            // Ask user where to insert the output
-            const insertionMode = await vscode.window.showQuickPick([
-                { label: 'Replace Selection', value: 'replace-selection' },
-                { label: 'Insert at Cursor', value: 'insert-at-cursor' },
-                { label: 'Append to Line', value: 'append-line' },
-                { label: 'Show in Output Panel', value: 'show-output' }
-            ], {
-                placeHolder: 'Where should the output be inserted?'
-            });
+            var selectedInsertionMode: string;
 
-            if (!insertionMode) {
-                return;
+            if (insertionMode) {
+                const validModes = ['replace-selection', 'insert-at-cursor', 'append-line', 'show-output', 'prompt'];
+                if (validModes.includes(insertionMode)) {
+                    selectedInsertionMode = insertionMode;
+                } else {
+                    vscode.window.showErrorMessage(`Invalid insertion mode: ${insertionMode}. Valid modes are: ${validModes.join(', ')}`);
+                    return;
+                }
+            }
+            else
+            {
+                // Read insertion mode from settings if not provided, default to 'prompt'
+                const config = vscode.workspace.getConfiguration('shellTaskPipe');
+                const defaultInsertionMode = config.get<string>('insertionMode', 'prompt');
+                selectedInsertionMode = defaultInsertionMode;
             }
 
-            if (insertionMode.value === 'show-output') {
+            if (!selectedInsertionMode || selectedInsertionMode === 'prompt') {                
+                // Ask user where to insert the output
+                const insertionModeChoice = await vscode.window.showQuickPick([
+                    { label: 'Replace Selection', value: 'replace-selection' },
+                    { label: 'Insert at Cursor', value: 'insert-at-cursor' },
+                    { label: 'Append to Line', value: 'append-line' },
+                    { label: 'Show in Output Panel', value: 'show-output' }
+                ], {
+                    placeHolder: 'Where should the output be inserted?'
+                });
+
+                if (!insertionModeChoice) {
+                    return;
+                }
+
+                // override selected insertion mode
+                selectedInsertionMode = insertionModeChoice.value;
+            }
+
+            if (selectedInsertionMode === 'show-output') {
                 // Execute without inserting
                 await this.executeQuickTask(task);
             } else {
                 // Execute and insert with specified mode
-                await this.executeQuickTask(task, editorInfo, insertionMode.value);
+                await this.executeQuickTask(task, editorInfo, selectedInsertionMode);
             }
 
         } catch (error) {
@@ -239,7 +224,7 @@ export class QuickCommands {
             const now = new Date();
             const dateString = this.formatDate(now, selectedFormat);
 
-            const result = await this.textInsertion.insertAtCursor(editorInfo, dateString);
+            const result = await this.textInsertion.replaceSelection(editorInfo, dateString);
             
             if (result.success) {
                 vscode.window.showInformationMessage('Date/time inserted');
@@ -259,7 +244,7 @@ export class QuickCommands {
     private async executeQuickTask(
         task: TaskDefinition, 
         editorInfo?: any, 
-        insertionMode: string = 'insert-at-cursor'
+        insertionMode: string = 'replace-selection'
     ): Promise<void> {
         try {
             await vscode.window.withProgress({
@@ -293,14 +278,16 @@ export class QuickCommands {
                     
                     let insertResult;
                     switch (insertionMode) {
-                        case 'replace-selection':
-                            insertResult = await this.textInsertion.replaceSelection(editorInfo, processedOutput);
-                            break;
                         case 'append-line':
                             insertResult = await this.textInsertion.appendToLine(editorInfo, processedOutput);
                             break;
-                        default:
+                        case 'insert-at-cursor':
                             insertResult = await this.textInsertion.insertAtCursor(editorInfo, processedOutput);
+                            break;
+                        default:
+                        case 'replace-selection':
+                            insertResult = await this.textInsertion.replaceSelection(editorInfo, processedOutput);
+                            break;
                     }
 
                     if (!insertResult.success) {

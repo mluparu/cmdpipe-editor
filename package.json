@@ -49,11 +49,6 @@
         "category": "Shell Task Pipe"
       },
       {
-        "command": "shellTaskPipe.quickEcho",
-        "title": "Quick Echo",
-        "category": "Shell Task Pipe"
-      },
-      {
         "command": "shellTaskPipe.quickCommand",
         "title": "Quick Command",
         "category": "Shell Task Pipe"
