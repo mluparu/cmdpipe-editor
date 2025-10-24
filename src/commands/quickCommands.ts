@@ -74,8 +74,7 @@ export class QuickCommands {
                 command: cmd,
                 args: args.length > 0 ? args : undefined,
                 outputProcessing: {
-                    trimWhitespace: true,
-                    maxOutputLength: 5000
+                    trimWhitespace: true
                 }
             };
 
@@ -135,7 +134,7 @@ export class QuickCommands {
             {
                 // Read insertion mode from settings if not provided, default to 'prompt'
                 const config = vscode.workspace.getConfiguration('shellTaskPipe');
-                const defaultInsertionMode = config.get<string>('insertionMode', 'prompt');
+                const defaultInsertionMode = config.get<string>('executeSelectionInsertionMode', 'prompt');
                 selectedInsertionMode = defaultInsertionMode;
             }
 
@@ -271,7 +270,7 @@ export class QuickCommands {
                     throw new Error(result.error || 'Command execution failed');
                 }
 
-                const processedOutput = processor.processOutput(result.output, task);
+                const processedOutput = processor.processOutput(result.output, task, insertionMode);
 
                 if (editorInfo && this.textInsertion.canInsertInEditor(editorInfo)) {
                     progress.report({ message: 'Inserting output...' });
@@ -298,7 +297,7 @@ export class QuickCommands {
                 } else {
                     // Show in output channel
                     const outputChannel = vscode.window.createOutputChannel(`Quick Command: ${task.command}`);
-                    outputChannel.appendLine(processor.formatOutput(processedOutput, task));
+                    outputChannel.appendLine(processor.formatOutputForOutputChannel(processedOutput, task));
                     outputChannel.show();
                 }
             });

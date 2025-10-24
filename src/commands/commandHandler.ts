@@ -152,9 +152,10 @@ export class CommandHandler {
 
                 // Process the output
                 progress.report({ message: 'Processing output...' });
-                const processedOutput = this.outputProcessor.processOutput(result.output, task);
+                const processedOutput = this.outputProcessor.processOutput(result.output, task, 'insert-at-cursor');
 
                 // Insert output at cursor
+                // TODO: Handle different insertion modes
                 progress.report({ message: 'Inserting output...' });
                 const insertionResult = await this.textInsertion.insertAtCursor(
                     editorInfo, 
@@ -201,7 +202,7 @@ export class CommandHandler {
                 // Process and display output
                 progress.report({ message: 'Processing output...' });
                 const processedOutput = this.outputProcessor.processOutput(result.output, task);
-                const formattedOutput = this.outputProcessor.formatOutput(processedOutput, task);
+                const formattedOutput = this.outputProcessor.formatOutputForOutputChannel(processedOutput, task);
 
                 // Show output in dedicated channel
                 this.showTaskOutput(task.name, formattedOutput, result);

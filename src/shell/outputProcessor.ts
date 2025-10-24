@@ -21,7 +21,7 @@ export class OutputProcessor {
     /**
      * Process output according to task configuration
      */
-    public processOutput(output: string, task: TaskDefinition): string {
+    public processOutput(output: string, task: TaskDefinition, insertionMode: string = 'replace-selection'): string {
         let processed = output;
         const processing = task.outputProcessing;
 
@@ -40,13 +40,17 @@ export class OutputProcessor {
             this.logger.warn(`Output truncated to ${processing.maxOutputLength} characters for task: ${task.id}`);
         }
 
+        if (insertionMode === 'append-line' && !processed.startsWith('\n')) {
+            processed = '\n' + processed;
+        }
+
         return processed;
     }
 
     /**
      * Format output with task information for display
      */
-    public formatOutput(output: string, task: TaskDefinition): string {
+    public formatOutputForOutputChannel(output: string, task: TaskDefinition): string {
         const timestamp = new Date().toISOString();
         const header = `=== Task: ${task.name} (${task.id}) === ${timestamp} ===`;
         const separator = '='.repeat(header.length);

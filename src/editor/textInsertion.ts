@@ -142,9 +142,13 @@ export class TextInsertion {
             const success = await vscode.workspace.applyEdit(edit);
             
             if (success) {
-                // Calculate new cursor position
+                // Calculate new cursor position and selection range
                 const lines = processedText.split('\n');
                 const newCursorPosition = this.calculateNewCursorPosition(selection.start, lines);
+                
+                // Create new selection for the inserted text
+                const newSelection = new vscode.Selection(selection.start, newCursorPosition);
+                editorInfo.editor.selection = newSelection;
                 
                 this.logger.debug(`Text replaced in selection from ${selection.start.line}:${selection.start.character} to ${selection.end.line}:${selection.end.character}`);
                 

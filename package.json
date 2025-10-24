@@ -87,10 +87,6 @@
           "when": "true"
         },
         {
-          "command": "shellTaskPipe.quickEcho",
-          "when": "true"
-        },
-        {
           "command": "shellTaskPipe.quickCommand",
           "when": "true"
         },
@@ -162,13 +158,25 @@
             "insert-at-cursor",
             "append-line"
           ],
-          "default": "insert-at-cursor",
+          "default": "replace-selection",
           "description": "How to handle output insertion in the editor",
+          "scope": "resource"
+        },
+        "shellTaskPipe.executeSelectionInsertionMode": {
+          "type": "string",
+          "enum": [
+            "replace-selection",
+            "insert-at-cursor",
+            "append-line",
+            "prompt"
+          ],
+          "default": "prompt",
+          "description": "How to handle output insertion when a shell command is executed based on the current selection in the editor",
           "scope": "resource"
         },
         "shellTaskPipe.trimOutput": {
           "type": "boolean",
-          "default": false,
+          "default": true,
           "description": "Whether to trim whitespace from command output before insertion",
           "scope": "resource"
         },
