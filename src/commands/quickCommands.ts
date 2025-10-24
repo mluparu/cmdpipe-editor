@@ -189,8 +189,10 @@ export class QuickCommands {
 
     /**
      * Insert current date and time
+     * @param format Optional format parameter. If not provided, shows quick pick menu.
      */
-    public async insertDateTime(): Promise<void> {
+    public async insertDateTime(format?: string): Promise<void> {
+        this.logger.info('Insert date/time command invoked');
         try {
             const editorInfo = this.cursorManager.getActiveEditor();
             if (!editorInfo) {
@@ -198,38 +200,44 @@ export class QuickCommands {
                 return;
             }
 
-            const format = await vscode.window.showQuickPick([
-                { label: 'ISO Format', value: 'iso', description: '2025-10-21T14:30:00Z' },
-                { label: 'Local Date/Time', value: 'local', description: '10/21/2025, 2:30:00 PM' },
-                { label: 'Date Only', value: 'date', description: '2025-10-21' },
-                { label: 'Time Only', value: 'time', description: '14:30:00' }
-            ], {
-                placeHolder: 'Select date/time format'
-            });
+            let selectedFormat: string;
 
-            if (!format) {
-                return;
+            // If format parameter is provided, use it directly
+            if (format) {
+                // Validate the format is supported
+                const validFormats = ['iso', 'local', 'date', 'time', 'us-date', 'eu-date', 'long', 'short', 'timestamp', 'custom'];
+                if (validFormats.includes(format)) {
+                    selectedFormat = format;
+                } else {
+                    vscode.window.showErrorMessage(`Invalid date format: ${format}. Valid formats: ${validFormats.join(', ')}`);
+                    return;
+                }
+            } else {
+                // Show quick pick menu if no parameter provided
+                const formatChoice = await vscode.window.showQuickPick([
+                    { label: 'ISO Format', value: 'iso', description: '2025-10-23T14:30:00Z' },
+                    { label: 'Local Date/Time', value: 'local', description: '10/23/2025, 2:30:00 PM' },
+                    { label: 'Date Only', value: 'date', description: '2025-10-23' },
+                    { label: 'Time Only', value: 'time', description: '14:30:00' },
+                    { label: 'US Date', value: 'us-date', description: '10/23/2025' },
+                    { label: 'European Date', value: 'eu-date', description: '23/10/2025' },
+                    { label: 'Long Format', value: 'long', description: 'Wednesday, October 23, 2025' },
+                    { label: 'Short Format', value: 'short', description: 'Oct 23, 2025' },
+                    { label: 'Timestamp', value: 'timestamp', description: '1729694200000' },
+                    { label: 'Custom Format', value: 'custom', description: '2025-10-23 14:30' }
+                ], {
+                    placeHolder: 'Select date/time format'
+                });
+
+                if (!formatChoice) {
+                    return;
+                }
+
+                selectedFormat = formatChoice.value;
             }
 
-            let dateString: string;
             const now = new Date();
-
-            switch (format.value) {
-                case 'iso':
-                    dateString = now.toISOString();
-                    break;
-                case 'local':
-                    dateString = now.toLocaleString();
-                    break;
-                case 'date':
-                    dateString = now.toISOString().split('T')[0];
-                    break;
-                case 'time':
-                    dateString = now.toTimeString().split(' ')[0];
-                    break;
-                default:
-                    dateString = now.toISOString();
-            }
+            const dateString = this.formatDate(now, selectedFormat);
 
             const result = await this.textInsertion.insertAtCursor(editorInfo, dateString);
             
@@ -311,6 +319,41 @@ export class QuickCommands {
         } catch (error) {
             this.logger.error(`Quick task failed: ${(error as Error).message}`);
             vscode.window.showErrorMessage(`Command failed: ${(error as Error).message}`);
+        }
+    }
+
+    /**
+     * Format date object into a string based on the selected format
+     */
+    private formatDate(date: Date, format: string): string {
+        try {
+            switch (format) {
+                case 'iso':
+                    return date.toISOString();
+                case 'local':
+                    return date.toLocaleString();
+                case 'date':
+                    return date.toISOString().split('T')[0];
+                case 'time':
+                    return date.toTimeString().split(' ')[0];
+                case 'us-date':
+                    return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`;
+                case 'eu-date':
+                    return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
+                case 'long':
+                    return date.toLocaleString('default', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                case 'short':
+                    return date.toLocaleString('default', { year: 'numeric', month: 'short', day: 'numeric' });
+                case 'timestamp':
+                    return date.getTime().toString();
+                case 'custom':
+                    return `${date.toISOString().split('T')[0]} ${date.toTimeString().split(' ')[0]}`;
+                default:
+                    return date.toISOString();
+            }
+        } catch (error) {
+            this.logger.error('Date formatting failed', error as Error);
+            return date.toISOString();
         }
     }
 }

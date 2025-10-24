@@ -43,7 +43,7 @@ export class CommandHandler {
      */
     public registerCommands(context: vscode.ExtensionContext): void {
         const commands = [
-            vscode.commands.registerCommand('shellTaskPipe.runTask', this.runTask.bind(this)),
+            //vscode.commands.registerCommand('shellTaskPipe.runTask', this.runTask.bind(this)),
             vscode.commands.registerCommand('shellTaskPipe.runTaskAtCursor', this.runTaskAtCursor.bind(this)),
             vscode.commands.registerCommand('shellTaskPipe.openConfig', this.openConfig.bind(this)),
             vscode.commands.registerCommand('shellTaskPipe.reloadConfig', this.reloadConfig.bind(this)),
