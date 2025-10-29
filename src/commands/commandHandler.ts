@@ -3,6 +3,7 @@ import { ShellExecutor } from '../shell/shellExecutor';
 import { OutputProcessor } from '../shell/outputProcessor';
 import { CursorManager } from '../editor/cursorManager';
 import { TextInsertion } from '../editor/textInsertion';
+import { TaskPickerCommands } from './taskPickerCommands';
 import { TaskDefinition, TaskExecutionResult } from '../types/taskTypes';
 import { Logger } from '../utils/logger';
 import { ErrorHandler } from '../utils/errorHandler';
@@ -18,6 +19,7 @@ export class CommandHandler {
     private outputProcessor: OutputProcessor;
     private cursorManager: CursorManager;
     private textInsertion: TextInsertion;
+    private taskPickerCommands: TaskPickerCommands;
 
     private constructor() {
         this.logger = Logger.getInstance();
@@ -26,6 +28,7 @@ export class CommandHandler {
         this.outputProcessor = new OutputProcessor();
         this.cursorManager = CursorManager.getInstance();
         this.textInsertion = TextInsertion.getInstance();
+        this.taskPickerCommands = new TaskPickerCommands();
     }
 
     /**
@@ -43,6 +46,7 @@ export class CommandHandler {
      */
     public registerCommands(context: vscode.ExtensionContext): void {
         const commands = [
+            // Original shell task pipe commands
             //vscode.commands.registerCommand('shellTaskPipe.runTask', this.runTask.bind(this)),
             vscode.commands.registerCommand('shellTaskPipe.runTaskAtCursor', this.runTaskAtCursor.bind(this)),
             vscode.commands.registerCommand('shellTaskPipe.openConfig', this.openConfig.bind(this)),
@@ -51,7 +55,13 @@ export class CommandHandler {
         ];
 
         commands.forEach(command => context.subscriptions.push(command));
-        this.logger.info('Registered shell task pipe commands');
+        
+        // Task picker commands are registered in their own class
+        // Add the TaskPickerCommands to subscriptions for proper cleanup
+        // TODO: Need to reconcile which commands are registered in the final iteration. There is a bit of duplication now
+        context.subscriptions.push(this.taskPickerCommands);
+        
+        this.logger.info('Registered shell task pipe commands and task picker commands');
     }
 
     /**
@@ -205,7 +215,7 @@ export class CommandHandler {
                 const formattedOutput = this.outputProcessor.formatOutputForOutputChannel(processedOutput, task);
 
                 // Show output in dedicated channel
-                this.showTaskOutput(task.name, formattedOutput, result);
+                this.showTaskOutputInOutputChannel(task.name, formattedOutput, result);
             });
 
         } catch (error) {
@@ -282,7 +292,7 @@ export class CommandHandler {
     /**
      * Show task output in a dedicated output channel
      */
-    private showTaskOutput(taskName: string, output: string, result: TaskExecutionResult): void {
+    private showTaskOutputInOutputChannel(taskName: string, output: string, result: TaskExecutionResult): void {
         const outputChannel = vscode.window.createOutputChannel(`Shell Task: ${taskName}`);
         outputChannel.appendLine(output);
         

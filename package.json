@@ -62,6 +62,42 @@
         "command": "shellTaskPipe.insertDateTime",
         "title": "Insert Date/Time",
         "category": "Shell Task Pipe"
+      },
+      {
+        "command": "cmdpipe.showTaskPicker",
+        "title": "Show Task Picker",
+        "category": "CmdPipe",
+        "icon": "$(list-selection)"
+      },
+      {
+        "command": "cmdpipe.refreshTasks",
+        "title": "Refresh Tasks",
+        "category": "CmdPipe",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "cmdpipe.createWorkspaceTasks",
+        "title": "Create Workspace Tasks",
+        "category": "CmdPipe",
+        "icon": "$(new-file)"
+      },
+      {
+        "command": "cmdpipe.openUserConfig",
+        "title": "Open User Configuration",
+        "category": "CmdPipe",
+        "icon": "$(folder-opened)"
+      },
+      {
+        "command": "cmdpipe.showTaskErrors",
+        "title": "Show Task Errors",
+        "category": "CmdPipe",
+        "icon": "$(error)"
+      },
+      {
+        "command": "cmdpipe.validateTaskConfigs",
+        "title": "Validate Task Configurations",
+        "category": "CmdPipe",
+        "icon": "$(check)"
       }
     ],
     "menus": {
@@ -97,6 +133,30 @@
         {
           "command": "shellTaskPipe.insertDateTime",
           "when": "true"
+        },
+        {
+          "command": "cmdpipe.showTaskPicker",
+          "when": "true"
+        },
+        {
+          "command": "cmdpipe.refreshTasks",
+          "when": "true"
+        },
+        {
+          "command": "cmdpipe.createWorkspaceTasks",
+          "when": "true"
+        },
+        {
+          "command": "cmdpipe.openUserConfig",
+          "when": "true"
+        },
+        {
+          "command": "cmdpipe.showTaskErrors",
+          "when": "true"
+        },
+        {
+          "command": "cmdpipe.validateTaskConfigs",
+          "when": "true"
         }
       ],
       "editor/context": [
@@ -122,6 +182,14 @@
         }
       ]
     },
+    "keybindings": [
+      {
+        "command": "cmdpipe.showTaskPicker",
+        "key": "ctrl+shift+t",
+        "mac": "cmd+shift+t",
+        "when": "true"
+      }
+    ],
     "configuration": {
       "title": "Shell Task Pipe",
       "properties": {
@@ -234,6 +302,7 @@
   },
   "dependencies": {
     "chokidar": "^3.5.3",
-    "ajv": "^8.12.0"
+    "ajv": "^8.12.0",
+    "ajv-formats": "^2.1.1"
   }
 }

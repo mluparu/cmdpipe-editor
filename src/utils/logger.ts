@@ -11,6 +11,22 @@ export enum LogLevel {
 }
 
 /**
+ * Logging categories for task picker automation features
+ */
+export enum LogCategory {
+    GENERAL = 'General',
+    TASK_DISCOVERY = 'TaskDiscovery',
+    TASK_VALIDATION = 'TaskValidation',
+    TASK_EXECUTION = 'TaskExecution',
+    TRUST_VALIDATION = 'TrustValidation',
+    FILE_WATCHING = 'FileWatching',
+    CONFIGURATION = 'Configuration',
+    USER_INTERFACE = 'UserInterface',
+    ERROR_HANDLING = 'ErrorHandling',
+    PERFORMANCE = 'Performance'
+}
+
+/**
  * Logger interface for extension-wide logging
  */
 export interface ILogger {
@@ -152,6 +168,29 @@ export function createScopedLogger(scope: string): ILogger {
         dispose: () => { /* Scoped loggers don't dispose the main logger */ }
     };
 }
+
+/**
+ * Create a category-specific logger for task picker features
+ */
+export function createCategoryLogger(category: LogCategory): ILogger {
+    return createScopedLogger(category);
+}
+
+/**
+ * Pre-configured loggers for task picker automation features
+ */
+export const categoryLoggers = {
+    general: createCategoryLogger(LogCategory.GENERAL),
+    taskDiscovery: createCategoryLogger(LogCategory.TASK_DISCOVERY),
+    taskValidation: createCategoryLogger(LogCategory.TASK_VALIDATION),
+    taskExecution: createCategoryLogger(LogCategory.TASK_EXECUTION),
+    trustValidation: createCategoryLogger(LogCategory.TRUST_VALIDATION),
+    fileWatching: createCategoryLogger(LogCategory.FILE_WATCHING),
+    configuration: createCategoryLogger(LogCategory.CONFIGURATION),
+    userInterface: createCategoryLogger(LogCategory.USER_INTERFACE),
+    errorHandling: createCategoryLogger(LogCategory.ERROR_HANDLING),
+    performance: createCategoryLogger(LogCategory.PERFORMANCE)
+};
 
 /**
  * Convenient logging functions for quick use

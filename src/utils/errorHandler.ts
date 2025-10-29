@@ -12,6 +12,10 @@ export enum ErrorType {
     VALIDATION = 'validation',
     TIMEOUT = 'timeout',
     PERMISSION = 'permission',
+    TRUST = 'trust',
+    DISCOVERY = 'discovery',
+    SCHEMA_VALIDATION = 'schema_validation',
+    FILE_WATCHING = 'file_watching',
     UNKNOWN = 'unknown'
 }
 
@@ -62,6 +66,14 @@ export class ShellTaskPipeError extends Error {
                 return `Timeout Error: ${this.message}`;
             case ErrorType.PERMISSION:
                 return `Permission Error: ${this.message}`;
+            case ErrorType.TRUST:
+                return `Workspace Trust Error: ${this.message}`;
+            case ErrorType.DISCOVERY:
+                return `Task Discovery Error: ${this.message}`;
+            case ErrorType.SCHEMA_VALIDATION:
+                return `Schema Validation Error: ${this.message}`;
+            case ErrorType.FILE_WATCHING:
+                return `File Watching Error: ${this.message}`;
             default:
                 return `Error: ${this.message}`;
         }
@@ -134,6 +146,126 @@ export class TimeoutError extends ShellTaskPipeError {
         super(message, ErrorType.TIMEOUT, 'TIMEOUT_ERROR', details);
         this.name = 'TimeoutError';
         this.timeoutMs = timeoutMs;
+    }
+}
+
+/**
+ * Trust validation error for workspace security
+ */
+export class TrustError extends ShellTaskPipeError {
+    public readonly workspaceUri: string;
+    public readonly taskSource: string;
+
+    constructor(message: string, workspaceUri: string, taskSource: string, details?: any) {
+        super(message, ErrorType.TRUST, 'TRUST_ERROR', details);
+        this.name = 'TrustError';
+        this.workspaceUri = workspaceUri;
+        this.taskSource = taskSource;
+    }
+
+    public getDetailedInfo(): any {
+        return {
+            ...super.getDetailedInfo(),
+            workspaceUri: this.workspaceUri,
+            taskSource: this.taskSource
+        };
+    }
+}
+
+/**
+ * Task discovery error
+ * TODO: Use this in the discovery code (taskScanner.ts)
+ */
+export class DiscoveryError extends ShellTaskPipeError {
+    public readonly searchPath: string;
+    public readonly fileCount: number;
+
+    constructor(message: string, searchPath: string, fileCount: number = 0, details?: any) {
+        super(message, ErrorType.DISCOVERY, 'DISCOVERY_ERROR', details);
+        this.name = 'DiscoveryError';
+        this.searchPath = searchPath;
+        this.fileCount = fileCount;
+    }
+
+    public getDetailedInfo(): any {
+        return {
+            ...super.getDetailedInfo(),
+            searchPath: this.searchPath,
+            fileCount: this.fileCount
+        };
+    }
+}
+
+/**
+ * Schema validation error with detailed location information
+ */
+export class SchemaValidationError extends ShellTaskPipeError {
+    public readonly filePath: string;
+    public readonly line?: number;
+    public readonly column?: number;
+    public readonly schemaPath?: string;
+
+    constructor(
+        message: string,
+        filePath: string,
+        line?: number,
+        column?: number,
+        schemaPath?: string,
+        details?: any
+    ) {
+        super(message, ErrorType.SCHEMA_VALIDATION, 'SCHEMA_VALIDATION_ERROR', details);
+        this.name = 'SchemaValidationError';
+        this.filePath = filePath;
+        this.line = line;
+        this.column = column;
+        this.schemaPath = schemaPath;
+    }
+
+    public getDetailedInfo(): any {
+        return {
+            ...super.getDetailedInfo(),
+            filePath: this.filePath,
+            line: this.line,
+            column: this.column,
+            schemaPath: this.schemaPath
+        };
+    }
+
+    /**
+     * Get a user-friendly location string
+     */
+    public getLocationString(): string {
+        const parts = [this.filePath];
+        if (this.line !== undefined) {
+            parts.push(`line ${this.line}`);
+            if (this.column !== undefined) {
+                parts.push(`column ${this.column}`);
+            }
+        }
+        return parts.join(', ');
+    }
+}
+
+/**
+ * File watching error
+ */
+export class FileWatchingError extends ShellTaskPipeError {
+    public readonly watchPath: string;
+    public readonly watcherCount: number;
+
+    constructor(message: string, watchPath: string, watcherCount: number = 0, details?: any) {
+        super(message, ErrorType.FILE_WATCHING, 'FILE_WATCHING_ERROR', details);
+        this.name = 'FileWatchingError';
+        this.watchPath = watchPath;
+        this.watcherCount = watcherCount;
+    }
+
+    public getDetailedInfo(): any {
+        return {
+            ...super.getDetailedInfo(),
+            watchPath: this.watchPath,
+            watcherCount: this.watcherCount
+        };
     }
 }
 

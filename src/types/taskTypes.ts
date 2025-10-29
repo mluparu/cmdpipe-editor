@@ -1,5 +1,7 @@
 // Type definitions for shell task configurations and execution
 
+import { TaskSource, ValidationError } from './configTypes';
+
 export type TaskCategory = 'file-system' | 'utility' | 'system' | 'development' | 'network' | 'custom';
 export type OutputFormat = 'raw' | 'json' | 'xml' | 'csv' | 'formatted';
 
@@ -131,3 +133,107 @@ export interface TaskExecutionContext {
     /** Path to the active document */
     documentPath?: string;
 }
+
+// /**
+//  * Extended task definition for task picker automation
+//  * Includes metadata for discovery, validation, and trust checking
+//  */
+// export interface ExtendedTaskDefinition extends TaskDefinition {
+//     /** Source location where this task was discovered */
+//     source: TaskSource;
+    
+//     /** File path of the configuration file containing this task */
+//     filePath: string;
+    
+//     /** Whether this task is from a trusted source */
+//     isTrusted: boolean;
+    
+//     /** Validation errors for this specific task */
+//     validationErrors: ValidationError[];
+    
+//     /** Last modified timestamp of the source file */
+//     lastModified: Date;
+    
+//     /** Hash of the task definition for change detection */
+//     hash: string;
+// }
+
+// /**
+//  * Complete task configuration file representation
+//  * Used by TaskConfigManager for file-based task discovery
+//  */
+// export interface TaskConfigurationFile {
+//     /** Absolute path to the configuration file */
+//     filePath: string;
+    
+//     /** Source location (workspace or user) */
+//     source: TaskSource;
+    
+//     /** Whether the file passed validation */
+//     isValid: boolean;
+    
+//     /** File modification timestamp */
+//     lastModified: Date;
+    
+//     /** Raw task definitions from the file */
+//     tasks: ExtendedTaskDefinition[];
+    
+//     /** File-level validation errors */
+//     errors: ValidationError[];
+    
+//     /** File content hash for change detection */
+//     contentHash: string;
+// }
+
+// /**
+//  * Task picker item for UI display
+//  * Combines task definition with display metadata
+//  */
+// export interface TaskPickerItem {
+//     /** The task definition */
+//     task: ExtendedTaskDefinition;
+    
+//     /** Display label for the picker */
+//     label: string;
+    
+//     /** Description shown in picker */
+//     description: string;
+    
+//     /** Detail text (file path, source info) */
+//     detail: string;
+    
+//     /** VS Code icon identifier */
+//     iconPath?: string;
+    
+//     /** Whether item should be pre-selected */
+//     picked?: boolean;
+    
+//     /** Whether item is disabled (untrusted) */
+//     disabled?: boolean;
+    
+//     /** Tooltip text for disabled items */
+//     tooltip?: string;
+// }
+
+// /**
+//  * Options for task discovery and scanning
+//  */
+// export interface TaskDiscoveryOptions {
+//     /** Whether to include workspace tasks */
+//     includeWorkspace: boolean;
+    
+//     /** Whether to include user global tasks */
+//     includeUser: boolean;
+    
+//     /** Whether to validate discovered tasks */
+//     validateTasks: boolean;
+    
+//     /** Whether to check workspace trust */
+//     checkTrust: boolean;
+    
+//     /** Maximum time to spend on discovery (ms) */
+//     timeout?: number;
+    
+//     /** Whether to refresh cached results */
+//     forceRefresh?: boolean;
+// }
