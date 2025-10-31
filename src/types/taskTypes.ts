@@ -3,7 +3,7 @@
 import { TaskSource, ValidationError } from './configTypes';
 
 export type TaskCategory = 'file-system' | 'utility' | 'system' | 'development' | 'network' | 'custom';
-export type OutputFormat = 'raw' | 'json' | 'xml' | 'csv' | 'formatted';
+// export type OutputFormat = 'raw' | 'json' | 'xml' | 'csv' | 'formatted';
 
 export interface TaskDefinition {
     /** Unique identifier for the task */
@@ -93,6 +93,7 @@ export interface TaskExecutionResult {
     
     /** Standard output from the command */
     output: string;
+    // TODO: Make this output binary always and handle encoding in OutputProcessor
     
     /** Standard error from the command */
     stderr?: string;
@@ -108,6 +109,15 @@ export interface TaskExecutionResult {
     
     /** Error message if execution failed */
     error?: string;
+    
+    /** Whether output contains binary data */
+    isBinary: boolean;
+    
+    /** Path to temporary file if binary data was saved */
+    tempFilePath?: string;
+    
+    /** Whether execution was cancelled by user */
+    cancelled: boolean;
 }
 
 export interface TaskExecutionContext {

@@ -5,93 +5,183 @@ import { Logger } from '../utils/logger';
 import { ThemeIcon } from 'vscode';
 
 /**
- * TaskPicker provides a VS Code QuickPick interface for selecting and executing tasks
+ * TaskPicker provides a VS Code QuickPick interface for selecting tasks
  * from both workspace and user configurations. It integrates with TaskConfigManager
  * to provide real-time task discovery and validation error reporting.
+ * 
+ * The picker returns the selected task to the caller for execution,
+ * allowing for centralized handling of output insertion.
  */
 export class TaskPicker implements vscode.Disposable {
     private readonly logger = Logger.getInstance();
-    private quickPick?: vscode.QuickPick<TaskPickerItem | vscode.QuickPickItem>; //(TaskPickerItem | vscode.QuickPickItem)[]
+    private quickPick?: vscode.QuickPick<TaskPickerItem | vscode.QuickPickItem>;
     private disposables: vscode.Disposable[] = [];
+    private resolveSelection?: (task: TaskDefinition | undefined) => void;
 
     constructor(private readonly taskConfigManager: TaskConfigManager) {}
 
     /**
-     * Show the task picker interface
-     * @returns Promise that resolves when picker is closed
+     * Show the task picker interface and return selected task
+     * @returns Promise that resolves with selected task or undefined if cancelled
      */
-    async show(): Promise<void> {
-        try {
-            // Load latest configurations
-            await this.taskConfigManager.loadConfigurations();
-
-            // Check for validation errors first
-            const validationErrors = this.taskConfigManager.getValidationErrors();
-            if (validationErrors.length > 0) {
-                await this.showValidationErrors(validationErrors);
-            }
-
-            // Get resolved tasks
-            const tasks = this.taskConfigManager.getResolvedTasks();
+    async showAndSelectTask(): Promise<TaskDefinition | undefined> {
+        return new Promise<TaskDefinition | undefined>(async (resolve) => {
+            this.resolveSelection = resolve;
             
-            if (tasks.length === 0) {
-                await this.showNoTasksMessage();
-                return;
+            try {
+                // Load latest configurations
+                await this.taskConfigManager.loadConfigurations();
+
+                // Check for validation errors first
+                const validationErrors = this.taskConfigManager.getValidationErrors();
+                if (validationErrors.length > 0) {
+                    await this.showValidationErrors(validationErrors);
+                }
+
+                // Get resolved tasks
+                const tasks = this.taskConfigManager.getResolvedTasks();
+                
+                if (tasks.length === 0) {
+                    await this.showNoTasksMessage();
+                    resolve(undefined);
+                    return;
+                }
+
+                // Create and configure quick pick
+                this.createQuickPickForSelection();
+                if (!this.quickPick) {
+                    throw new Error('Failed to create QuickPick');
+                }
+
+                // Populate with tasks
+                this.populateTaskItems(tasks);
+
+                // Show the picker
+                this.quickPick.show();
+
+                this.logger.info(`Displayed task picker with ${tasks.length} tasks for selection`);
+            } catch (error) {
+                this.logger.error('Failed to show task picker', error instanceof Error ? error : new Error(String(error)));
+                
+                vscode.window.showErrorMessage(
+                    `Failed to load task configurations: ${error instanceof Error ? error.message : String(error)}`
+                );
+                resolve(undefined);
             }
-
-            // Create and configure quick pick
-            this.createQuickPick();
-            if (!this.quickPick) {
-                throw new Error('Failed to create QuickPick');
-            }
-
-            // Populate with tasks
-            this.populateTaskItems(tasks);
-
-            // Show the picker
-            this.quickPick.show();
-
-            this.logger.info(`Displayed task picker with ${tasks.length} tasks`);
-        } catch (error) {
-            this.logger.error('Failed to show task picker', error instanceof Error ? error : new Error(String(error)));
-            
-            vscode.window.showErrorMessage(
-                `Failed to load task configurations: ${error instanceof Error ? error.message : String(error)}`
-            );
-        }
+        });
     }
 
+    // /**
+    //  * Show the task picker interface (legacy method for compatibility)
+    //  * @returns Promise that resolves when picker is closed
+    //  */
+    // async show(): Promise<void> {
+    //     try {
+    //         // Load latest configurations
+    //         await this.taskConfigManager.loadConfigurations();
+
+    //         // Check for validation errors first
+    //         const validationErrors = this.taskConfigManager.getValidationErrors();
+    //         if (validationErrors.length > 0) {
+    //             await this.showValidationErrors(validationErrors);
+    //         }
+
+    //         // Get resolved tasks
+    //         const tasks = this.taskConfigManager.getResolvedTasks();
+            
+    //         if (tasks.length === 0) {
+    //             await this.showNoTasksMessage();
+    //             return;
+    //         }
+
+    //         // Create and configure quick pick
+    //         this.createQuickPick();
+    //         if (!this.quickPick) {
+    //             throw new Error('Failed to create QuickPick');
+    //         }
+
+    //         // Populate with tasks
+    //         this.populateTaskItems(tasks);
+
+    //         // Show the picker
+    //         this.quickPick.show();
+
+    //         this.logger.info(`Displayed task picker with ${tasks.length} tasks`);
+    //     } catch (error) {
+    //         this.logger.error('Failed to show task picker', error instanceof Error ? error : new Error(String(error)));
+            
+    //         vscode.window.showErrorMessage(
+    //             `Failed to load task configurations: ${error instanceof Error ? error.message : String(error)}`
+    //         );
+    //     }
+    // }
+
+    // /**
+    //  * Refresh the task picker with latest configurations
+    //  * @returns Promise that resolves when refresh is complete
+    //  */
+    // async refresh(): Promise<void> {
+    //     try {
+    //         if (!this.quickPick) {
+    //             return;
+    //         }
+
+    //         // Reload configurations
+    //         await this.taskConfigManager.loadConfigurations();
+    //         const tasks = this.taskConfigManager.getResolvedTasks();
+
+    //         // Update picker items
+    //         this.populateTaskItems(tasks);
+
+    //         this.logger.debug('Task picker refreshed');
+    //     } catch (error) {
+    //         this.logger.error('Failed to refresh task picker', error instanceof Error ? error : new Error(String(error)));
+    //     }
+    // }
+
+    // /**
+    //  * Create and configure the VS Code QuickPick
+    //  */
+    // private createQuickPick(): void {
+    //     this.quickPick = vscode.window.createQuickPick<TaskPickerItem>();
+        
+    //     this.quickPick.title = 'Select Task';
+    //     this.quickPick.placeholder = 'Choose a task to execute';
+    //     this.quickPick.matchOnDescription = true;
+    //     this.quickPick.matchOnDetail = true;
+
+    //     // Handle task selection
+    //     this.quickPick.onDidAccept(() => {
+    //         const selectedItem = this.quickPick?.selectedItems[0];
+    //         if (selectedItem && 'task' in selectedItem) {
+    //             this.executeTask((selectedItem as TaskPickerItem).task);
+    //             this.quickPick?.hide();
+    //         }
+    //     });
+
+    //     // Handle picker close
+    //     this.quickPick.onDidHide(() => {
+    //         this.dispose();
+    //     });
+
+    //     // Handle search/filter changes
+    //     this.quickPick.onDidChangeValue((value) => {
+    //         // The built-in filtering handles this automatically
+    //         // We could implement custom filtering logic here if needed
+    //     });
+
+    //     // Store disposable for cleanup
+    //     this.disposables.push(this.quickPick);
+    // }
+
     /**
-     * Refresh the task picker with latest configurations
-     * @returns Promise that resolves when refresh is complete
+     * Create and configure the VS Code QuickPick for task selection (returns selected task)
      */
-    async refresh(): Promise<void> {
-        try {
-            if (!this.quickPick) {
-                return;
-            }
-
-            // Reload configurations
-            await this.taskConfigManager.loadConfigurations();
-            const tasks = this.taskConfigManager.getResolvedTasks();
-
-            // Update picker items
-            this.populateTaskItems(tasks);
-
-            this.logger.debug('Task picker refreshed');
-        } catch (error) {
-            this.logger.error('Failed to refresh task picker', error instanceof Error ? error : new Error(String(error)));
-        }
-    }
-
-    /**
-     * Create and configure the VS Code QuickPick
-     */
-    private createQuickPick(): void {
+    private createQuickPickForSelection(): void {
         this.quickPick = vscode.window.createQuickPick<TaskPickerItem>();
         
-        this.quickPick.title = 'Select Task';
-        this.quickPick.placeholder = 'Choose a task to execute';
+        this.quickPick.title = 'Select Task to Execute';
+        this.quickPick.placeholder = 'Choose a task - output will be inserted at cursor position';
         this.quickPick.matchOnDescription = true;
         this.quickPick.matchOnDetail = true;
 
@@ -99,13 +189,16 @@ export class TaskPicker implements vscode.Disposable {
         this.quickPick.onDidAccept(() => {
             const selectedItem = this.quickPick?.selectedItems[0];
             if (selectedItem && 'task' in selectedItem) {
-                this.executeTask((selectedItem as TaskPickerItem).task);
+                // Return the selected task through the promise
+                this.resolveSelection?.((selectedItem as TaskPickerItem).task);
                 this.quickPick?.hide();
             }
         });
 
-        // Handle picker close
+        // Handle picker close/cancel
         this.quickPick.onDidHide(() => {
+            // If no task was selected, resolve with undefined
+            this.resolveSelection?.(undefined);
             this.dispose();
         });
 
@@ -192,27 +285,26 @@ export class TaskPicker implements vscode.Disposable {
         };
     }
 
-    /**
-     * Execute a selected task
-     * @param task Task definition to execute
-     */
-    private async executeTask(task: TaskDefinition): Promise<void> {
-        try {
-            this.logger.info(`Executing task: ${task.name} (${task.source})`);
+    // /**
+    //  * Execute a selected task
+    //  * @param task Task definition to execute
+    //  */
+    // private async executeTask(task: TaskDefinition): Promise<void> {
+    //     try {
+    //         this.logger.info(`Executing task: ${task.name} (${task.source})`);
             
-            // Use VS Code's built-in task execution
-            await vscode.commands.executeCommand('workbench.action.tasks.runTask', task.name);
-            // TODO: Looks like we forgot that we want to execute these tasks and collect the output in the editor
+    //         // Use VS Code's built-in task execution
+    //         await vscode.commands.executeCommand('workbench.action.tasks.runTask', task.name);
             
-            this.logger.debug(`Task execution initiated for: ${task.name}`);
-        } catch (error) {
-            this.logger.error(`Failed to execute task ${task.name}`, error instanceof Error ? error : new Error(String(error)));
+    //         this.logger.debug(`Task execution initiated for: ${task.name}`);
+    //     } catch (error) {
+    //         this.logger.error(`Failed to execute task ${task.name}`, error instanceof Error ? error : new Error(String(error)));
             
-            vscode.window.showErrorMessage(
-                `Failed to execute task "${task.name}": ${error instanceof Error ? error.message : String(error)}`
-            );
-        }
-    }
+    //         vscode.window.showErrorMessage(
+    //             `Failed to execute task "${task.name}": ${error instanceof Error ? error.message : String(error)}`
+    //         );
+    //     }
+    // }
 
     /**
      * Show validation errors to the user

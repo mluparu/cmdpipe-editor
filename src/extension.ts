@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { Logger, LogLevel } from './utils/logger';
 import { errorHandler } from './utils/errorHandler';
 import { ExtensionContext } from './types/extensionTypes';
-import { CommandHandler, QuickCommands } from './commands';
+import { CommandHandler } from './commands';
 
 // Global extension context
 let extensionContext: ExtensionContext;
@@ -29,12 +29,12 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         const logLevel = config.get<string>('logLevel', 'info');
         logger.setLevel(getLogLevelFromString(logLevel));
 
-        // Register all commands
+        // Register all commands through unified command handler
         const commandHandler = CommandHandler.getInstance();
-        const quickCommands = QuickCommands.getInstance();
+        commandHandler.registerAllCommands(context);
         
-        commandHandler.registerCommands(context);
-        quickCommands.registerCommands(context);
+        // Add command handler to subscriptions for proper cleanup
+        context.subscriptions.push(commandHandler);
         
         logger.info('Registered all shell task pipe commands');
 

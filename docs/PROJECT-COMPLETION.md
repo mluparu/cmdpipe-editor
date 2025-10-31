@@ -49,15 +49,13 @@ The Shell Task Pipe VSCode extension MVP has been successfully completed. This d
 ### ✅ VSCode Integration (100% Complete)
 
 #### Commands Registered
-1. `shellTaskPipe.runTask` - Show task picker and run selected task
-2. `shellTaskPipe.runTaskAtCursor` - Run task and insert output at cursor
-3. `shellTaskPipe.openConfig` - Open task configuration file
-4. `shellTaskPipe.reloadConfig` - Reload tasks from configuration
-5. `shellTaskPipe.showLogs` - View extension logs
-6. `shellTaskPipe.quickEcho` - Quick demo command
-7. `shellTaskPipe.quickCommand` - Enter and run custom command
-8. `shellTaskPipe.executeSelection` - Execute selected text as command
-9. `shellTaskPipe.insertDateTime` - Insert current date and time
+1. `shellTaskPipe.openConfig` - Open task configuration file
+2. `shellTaskPipe.reloadConfig` - Reload tasks from configuration
+3. `shellTaskPipe.showLogs` - View extension logs
+4. `shellTaskPipe.quickEcho` - Quick demo command
+5. `shellTaskPipe.quickCommand` - Enter and run custom command
+6. `shellTaskPipe.executeSelection` - Execute selected text as command
+7. `shellTaskPipe.insertDateTime` - Insert current date and time
 
 #### Configuration Schema
 - JSON-based task configuration with validation

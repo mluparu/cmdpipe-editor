@@ -2,6 +2,19 @@
 import * as vscode from 'vscode';
 import { TaskDefinition, TaskExecutionResult } from './taskTypes';
 
+export enum InsertionMode {
+    /** Insert at current cursor position */
+    CURSOR = 'cursor',
+    /** Replace currently selected text */
+    REPLACE_SELECTION = 'replace-selection',
+    /** Show in VS Code output panel */
+    OUTPUT_PANEL = 'output-panel',
+    /** Append to current line */
+    APPEND_LINE = 'append-line',
+    /** Ask user for insertion preference */
+    PROMPT = 'prompt' // TODO: Handle prompt mode in insertion logic
+}
+
 export interface ExtensionContext {
     /** VSCode extension context */
     context: vscode.ExtensionContext;
@@ -20,28 +33,76 @@ export interface CommandRegistration {
     /** Command identifier */
     commandId: string;
     
-    /** Associated task definition */
-    task: TaskDefinition;
-    
     /** VSCode disposable for cleanup */
     disposable: vscode.Disposable;
+    
+    /** Command handler function */
+    handler: (...args: any[]) => any;
+    
+    /** Command metadata */
+    metadata: CommandMetadata;
 }
 
-export interface EditorInfo {
-    /** Active text editor */
-    editor: vscode.TextEditor;
+export type CommandRegistry = Map<string, CommandRegistration>;
+
+export interface CommandMetadata {
+    /** Human-readable command title */
+    title: string;
+    
+    /** Command category for organization */
+    category: string;
+    
+    /** Optional command description */
+    description?: string;
+    
+    /** Optional when clause for conditional availability */
+    when?: string;
+    
+    /** Optional icon identifier */
+    icon?: string;
+    
+    /** Optional keyboard shortcut */
+    shortcut?: string;
+}
+
+// export interface EditorInfo {
+//     /** Active text editor */
+//     editor: vscode.TextEditor;
+    
+//     /** Current cursor position */
+//     cursorPosition: vscode.Position;
+    
+//     /** Current selection */
+//     selection: vscode.Selection;
+    
+//     /** Whether editor is readonly */
+//     isReadonly: boolean;
+    
+//     /** Document URI */
+//     documentUri: vscode.Uri;
+// }
+
+export interface OutputInsertionContext {
+    /** URI of the active editor */
+    editorUri: vscode.Uri;
     
     /** Current cursor position */
     cursorPosition: vscode.Position;
     
-    /** Current selection */
-    selection: vscode.Selection;
+    /** Currently selected text range */
+    selectedRange?: vscode.Range;
     
-    /** Whether editor is readonly */
+    /** How to insert the output */
+    insertionMode: InsertionMode;
+    
+    /** Whether the editor is read-only */
     isReadonly: boolean;
     
-    /** Document URI */
-    documentUri: vscode.Uri;
+    /** Programming language of the editor */
+    language: string;
+    
+    /** Whether an editor is currently active */
+    hasActiveEditor: boolean;
 }
 
 export interface InsertionResult {
@@ -84,19 +145,19 @@ export interface PlatformInfo {
     pathEnvVar: string;
 }
 
-export interface ErrorInfo {
-    /** Error type */
-    type: 'validation' | 'execution' | 'editor' | 'system';
+// export interface ErrorInfo {
+//     /** Error type */
+//     type: 'validation' | 'execution' | 'editor' | 'system';
     
-    /** Error message */
-    message: string;
+//     /** Error message */
+//     message: string;
     
-    /** Detailed error information */
-    details?: string;
+//     /** Detailed error information */
+//     details?: string;
     
-    /** Associated task (if applicable) */
-    task?: TaskDefinition;
+//     /** Associated task (if applicable) */
+//     task?: TaskDefinition;
     
-    /** Stack trace (if applicable) */
-    stack?: string;
-}
+//     /** Stack trace (if applicable) */
+//     stack?: string;
+// }
