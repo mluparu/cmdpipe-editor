@@ -99,6 +99,15 @@ export class TaskConfigManager {
         }
     }
 
+    getTaskByName(taskName?: string): TaskDefinition | undefined {
+        if (!taskName) {
+            return undefined;
+        }
+
+        const resolvedTasks = this.getResolvedTasks();
+        return resolvedTasks.find(task => task.name === taskName);
+    }
+
     /**
      * Validate a configuration file against schema
      * @param filePath Absolute path to configuration file

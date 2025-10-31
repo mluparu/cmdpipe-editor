@@ -688,26 +688,34 @@ export class CommandHandler implements vscode.Disposable {
     /**
      * Show task picker to select and execute tasks
      */
-    public async showTaskPicker(): Promise<void> {
+    public async showTaskPicker(taskName?: string): Promise<void> {
         try {
             this.logger.info('Task picker invoked');
 
-            // Create or reuse task picker
-            if (!this.currentTaskPicker) {
-                this.currentTaskPicker = new TaskPicker(this.taskConfigManager);
-            }
-
             // Get current editor context for output insertion
             const context = this.cursorManager.createOutputInsertionContext();
+            if (taskName) {
+                this.logger.info(`Task Name provided: ${taskName}`);                
+            }
+
+            let selectedTask = this.taskConfigManager.getTaskByName(taskName);
+            if (!selectedTask) 
+            {
+                // Create or reuse task picker
+                if (!this.currentTaskPicker) {
+                    this.currentTaskPicker = new TaskPicker(this.taskConfigManager);
+                }
             
-            // Show task picker and get selected task
-            const selectedTask = await this.currentTaskPicker.showAndSelectTask();
+                // Show task picker and get selected task
+                selectedTask = await this.currentTaskPicker.showAndSelectTask();
+            }
             
             if (selectedTask && context) {
                 // Convert config task to execution task
                 const executionTask = this.convertConfigTaskToExecutionTask(selectedTask);
                 await this.executeTaskWithNewContext(executionTask, context);
-            } else if (selectedTask && !context) {
+            } 
+            else if (selectedTask && !context) {
                 // No editor context - show in output panel
                 vscode.window.showInformationMessage('No active editor found. Task output will be shown in output panel.');
                 const executionTask = this.convertConfigTaskToExecutionTask(selectedTask);
