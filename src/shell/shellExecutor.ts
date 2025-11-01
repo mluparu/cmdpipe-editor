@@ -459,18 +459,12 @@ export class ShellExecutor {
             let cancelled = false;
 
             // Set up timeout
-            // TODO: Avoid duplication of timeout logic across methods in this class; use Windows specific handling as needed
             if (timeout && timeout > 0) {
                 timeoutHandle = setTimeout(() => {
                     logger.warn(`Task ${taskId} timed out after ${timeout}ms`);
+
+                    this.cancelTask(taskId);
                     cancelled = true;
-                    child.kill('SIGTERM');
-                    
-                    setTimeout(() => {
-                        if (!child.killed) {
-                            child.kill('SIGKILL');
-                        }
-                    }, 5000);
                     
                     reject(new TimeoutError(
                         `Task execution timed out after ${timeout}ms`,

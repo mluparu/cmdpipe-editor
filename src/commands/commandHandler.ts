@@ -246,7 +246,6 @@ export class CommandHandler implements vscode.Disposable {
     //     try {
     //         this.logger.info('runTask command invoked');
 
-    //         // TODO: Get available tasks from configuration
     //         const tasks = await this.getAvailableTasks();
             
     //         if (tasks.length === 0) {
@@ -339,7 +338,6 @@ export class CommandHandler implements vscode.Disposable {
     //             const processedOutput = this.outputProcessor.processOutput(result.output, task, 'insert-at-cursor');
 
     //             // Insert output at cursor
-    //             // TODO: Handle different insertion modes
     //             progress.report({ message: 'Inserting output...' });
     //             const insertionResult = await this.textInsertion.insertAtCursor(
     //                 editorInfo, 
@@ -400,7 +398,6 @@ export class CommandHandler implements vscode.Disposable {
 
     // /**
     //  * Get available tasks from configuration
-    //  * TODO: Implement proper configuration loading
     //  */
     // private async getAvailableTasks(): Promise<TaskDefinition[]> {
     //     // For now, return some example tasks
@@ -489,7 +486,6 @@ export class CommandHandler implements vscode.Disposable {
     // private async openConfig(): Promise<void> {
     //     try {
     //         vscode.window.showInformationMessage('Configuration management will be implemented in the next task');
-    //         // TODO: Implement in T028
     //     } catch (error) {
     //         this.errorHandler.handleError(error as Error, 'Failed to open configuration');
     //     }
@@ -501,7 +497,6 @@ export class CommandHandler implements vscode.Disposable {
     // private async reloadConfig(): Promise<void> {
     //     try {
     //         vscode.window.showInformationMessage('Configuration reload will be implemented in the next task');
-    //         // TODO: Implement in T028
     //     } catch (error) {
     //         this.errorHandler.handleError(error as Error, 'Failed to reload configuration');
     //     }
@@ -599,7 +594,7 @@ export class CommandHandler implements vscode.Disposable {
     /**
      * Insert current date and time at cursor
      */
-    public async insertDateTime(): Promise<void> {
+    public async insertDateTime(format?: string): Promise<void> {
         try {
             this.logger.info('Insert date/time command invoked');
 
@@ -609,9 +604,45 @@ export class CommandHandler implements vscode.Disposable {
                 return;
             }
 
+            let selectedFormat: string;
+
+            // If format parameter is provided, use it directly
+            if (format) {
+                // Validate the format is supported
+                const validFormats = ['iso', 'local', 'date', 'time', 'us-date', 'eu-date', 'long', 'short', 'timestamp', 'custom'];
+                if (validFormats.includes(format)) {
+                    selectedFormat = format;
+                } else {
+                    vscode.window.showErrorMessage(`Invalid date format: ${format}. Valid formats: ${validFormats.join(', ')}`);
+                    return;
+                }
+            } else {
+                // Show quick pick menu if no parameter provided
+                const formatChoice = await vscode.window.showQuickPick([
+                    { label: 'ISO Format', value: 'iso', description: '2025-10-23T14:30:00Z' },
+                    { label: 'Local Date/Time', value: 'local', description: '10/23/2025, 2:30:00 PM' },
+                    { label: 'Date Only', value: 'date', description: '2025-10-23' },
+                    { label: 'Time Only', value: 'time', description: '14:30:00' },
+                    { label: 'US Date', value: 'us-date', description: '10/23/2025' },
+                    { label: 'European Date', value: 'eu-date', description: '23/10/2025' },
+                    { label: 'Long Format', value: 'long', description: 'Wednesday, October 23, 2025' },
+                    { label: 'Short Format', value: 'short', description: 'Oct 23, 2025' },
+                    { label: 'Timestamp', value: 'timestamp', description: '1729694200000' },
+                    { label: 'Custom Format', value: 'custom', description: '2025-10-23 14:30' }
+                ], {
+                    placeHolder: 'Select date/time format'
+                });
+
+                if (!formatChoice) {
+                    return;
+                }
+
+                selectedFormat = formatChoice.value;
+            }
+
             const now = new Date();
             // TODO: Allow user to configure date/time format; salvage code from old implementation
-            const dateTimeString = now.toLocaleString();
+            const dateTimeString = this.formatDate(now, selectedFormat);
 
             const result = await this.textInsertion.insertOutput(context, dateTimeString);
             
@@ -621,6 +652,41 @@ export class CommandHandler implements vscode.Disposable {
 
         } catch (error) {
             this.errorHandler.handleError(error as Error, 'Failed to insert date/time');
+        }
+    }
+
+    /**
+     * Format date object into a string based on the selected format
+     */
+    private formatDate(date: Date, format: string): string {
+        try {
+            switch (format) {
+                case 'iso':
+                    return date.toISOString(); // example: "2025-10-23T14:30:00.000Z"
+                case 'local':
+                    return date.toLocaleString(); // example: "10/23/2025, 2:30:00 PM"
+                case 'date':
+                    return date.toISOString().split('T')[0]; // example: "2025-10-23"
+                case 'time':
+                    return date.toTimeString().split(' ')[0]; // example: "14:30:00"
+                case 'us-date':
+                    return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`; // example: "10/23/2025"
+                case 'eu-date':
+                    return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`; // example: "23/10/2025"
+                case 'long':
+                    return date.toLocaleString('default', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }); // example: "Wednesday, October 23, 2025"
+                case 'short':
+                    return date.toLocaleString('default', { year: 'numeric', month: 'short', day: 'numeric' }); // example: "Oct 23, 2025"
+                case 'timestamp':
+                    return date.getTime().toString(); // example: "1729694200000"
+                case 'custom':
+                    return `${date.toISOString().split('T')[0]} ${date.toTimeString().split(' ')[0]}`;
+                default:
+                    return date.toISOString();
+            }
+        } catch (error) {
+            this.logger.error('Date formatting failed', error as Error);
+            return date.toISOString();
         }
     }
 
