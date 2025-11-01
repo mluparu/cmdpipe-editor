@@ -3,6 +3,7 @@ import { TaskConfigManager } from '../config/taskConfigManager';
 import { TaskDefinition, TaskSource, TaskPickerItem, ValidationError } from '../types/configTypes';
 import { Logger } from '../utils/logger';
 import { ThemeIcon } from 'vscode';
+import { pathUtils } from '../utils/pathUtils';
 
 /**
  * TaskPicker provides a VS Code QuickPick interface for selecting tasks
@@ -411,7 +412,7 @@ export class TaskPicker implements vscode.Disposable {
      */
     private async openUserConfigDirectory(): Promise<void> {
         try {
-            const userConfigPath = this.getUserConfigPath();
+            const userConfigPath = pathUtils.getUserConfigPath(this.logger);
             if (!userConfigPath) {
                 vscode.window.showWarningMessage('Unable to determine user configuration directory');
                 return;
@@ -436,26 +437,26 @@ export class TaskPicker implements vscode.Disposable {
         }
     }
 
-    /**
-     * Get the user configuration directory path
-     * @returns User config path or null if not available
-     */
-    private getUserConfigPath(): string | null {
-        // TODO: Avoid duplicated logic with TaskConfigManager and taskScanner
-        try {
-            const userDataPath = process.env.APPDATA || 
-                                process.env.HOME || 
-                                process.env.USERPROFILE;
+    // /**
+    //  * Get the user configuration directory path
+    //  * @returns User config path or null if not available
+    //  */
+    // private getUserConfigPath(): string | null {
+    //     // TODO: Avoid duplicated logic with TaskConfigManager and taskScanner
+    //     try {
+    //         const userDataPath = process.env.APPDATA || 
+    //                             process.env.HOME || 
+    //                             process.env.USERPROFILE;
             
-            if (!userDataPath) {
-                return null;
-            }
+    //         if (!userDataPath) {
+    //             return null;
+    //         }
 
-            return require('path').join(userDataPath, '.vscode', 'cmdpipe', 'tasks');
-        } catch {
-            return null;
-        }
-    }
+    //         return require('path').join(userDataPath, '.vscode', 'cmdpipe', 'tasks');
+    //     } catch {
+    //         return null;
+    //     }
+    // }
 
     /**
      * Dispose of resources

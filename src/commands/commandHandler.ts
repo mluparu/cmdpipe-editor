@@ -641,7 +641,6 @@ export class CommandHandler implements vscode.Disposable {
             }
 
             const now = new Date();
-            // TODO: Allow user to configure date/time format; salvage code from old implementation
             const dateTimeString = this.formatDate(now, selectedFormat);
 
             const result = await this.textInsertion.insertOutput(context, dateTimeString);

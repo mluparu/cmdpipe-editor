@@ -93,7 +93,7 @@ export class OutputProcessor {
         insertionMode: string = 'replace-selection'
     ): Promise<ProcessedOutput> 
     {
-        const buffer = typeof result.output === 'string' ? Buffer.from(result.output, 'utf8') : result.output;
+        const buffer = result.output; // typeof result.output === 'string' ? Buffer.from(result.output, 'utf8') : result.output;
         const isBinary = this.isBinaryData(buffer);
         
         let content: string;

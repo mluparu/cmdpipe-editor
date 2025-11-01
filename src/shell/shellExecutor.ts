@@ -534,27 +534,28 @@ export class ShellExecutor {
         const success = result.exitCode === 0;
 
         // Convert buffers to strings for now (binary detection will be handled by OutputProcessor)
-        let output = result.stdout.toString('utf8');
-        const stderr = result.stderr.toString('utf8');
+        let output = result.stdout; //.toString('utf8');
+        const stderr = result.stderr; //.toString('utf8');
 
-        // Apply basic output processing
-        const processing = task.outputProcessing;
-        if (processing) {
-            // Trim whitespace if configured
-            if (processing.trimWhitespace !== false) {
-                output = output.trim();
-            }
+        // TODO: process text output elsewhere, after the binary check
+        // // Apply basic output processing
+        // const processing = task.outputProcessing;
+        // if (processing) {
+        //     // Trim whitespace if configured
+        //     if (processing.trimWhitespace !== false) {
+        //         output = output.trim();
+        //     }
 
-            // Limit output length
-            if (processing.maxOutputLength && output.length > processing.maxOutputLength) {
-                output = output.substring(0, processing.maxOutputLength);
-                logger.warn(`Output truncated to ${processing.maxOutputLength} characters for task: ${task.id}`);
-            }
-        }
+        //     // Limit output length
+        //     if (processing.maxOutputLength && output.length > processing.maxOutputLength) {
+        //         output = output.substring(0, processing.maxOutputLength);
+        //         logger.warn(`Output truncated to ${processing.maxOutputLength} characters for task: ${task.id}`);
+        //     }
+        // }
 
         return {
             success,
-            output,
+            output, // Will be parsed later by OutputProcessor
             stderr,
             exitCode: result.exitCode,
             taskId: task.id,
@@ -585,8 +586,8 @@ export class ShellExecutor {
 
         return {
             success: false,
-            output: '',
-            stderr: '',
+            output: null as unknown as Buffer,
+            stderr: null as unknown as Buffer,
             exitCode,
             taskId: task.id,
             executionTime,
@@ -596,34 +597,34 @@ export class ShellExecutor {
         };
     }
 
-    /**
-     * Create an error result for failed execution
-     */
-    private createErrorResult(
-        task: TaskDefinition,
-        error: Error,
-        executionTime: number
-    ): TaskExecutionResult {
-        let errorMessage = error.message;
-        let exitCode = -1;
+    // /**
+    //  * Create an error result for failed execution
+    //  */
+    // private createErrorResult(
+    //     task: TaskDefinition,
+    //     error: Error,
+    //     executionTime: number
+    // ): TaskExecutionResult {
+    //     let errorMessage = error.message;
+    //     let exitCode = -1;
 
-        if (error instanceof TaskExecutionError) {
-            exitCode = error.exitCode || -1;
-        } else if (error instanceof TimeoutError) {
-            errorMessage = `Task timed out after ${error.timeoutMs}ms`;
-            exitCode = -2;
-        }
+    //     if (error instanceof TaskExecutionError) {
+    //         exitCode = error.exitCode || -1;
+    //     } else if (error instanceof TimeoutError) {
+    //         errorMessage = `Task timed out after ${error.timeoutMs}ms`;
+    //         exitCode = -2;
+    //     }
 
-        return {
-            success: false,
-            output: '',
-            stderr: '',
-            exitCode,
-            taskId: task.id,
-            executionTime,
-            isBinary: false,
-            cancelled: false,
-            error: errorMessage
-        };
-    }
+    //     return {
+    //         success: false,
+    //         output: null as unknown as Buffer,
+    //         stderr: null as unknown as Buffer,
+    //         exitCode,
+    //         taskId: task.id,
+    //         executionTime,
+    //         isBinary: false,
+    //         cancelled: false,
+    //         error: errorMessage
+    //     };
+    // }
 }

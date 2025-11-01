@@ -92,11 +92,11 @@ export interface TaskExecutionResult {
     success: boolean;
     
     /** Standard output from the command */
-    output: string;
+    output: Buffer;
     // TODO: Make this output binary always and handle encoding in OutputProcessor
     
     /** Standard error from the command */
-    stderr?: string;
+    stderr?: Buffer;
     
     /** Exit code of the command */
     exitCode: number;

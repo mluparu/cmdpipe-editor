@@ -10,11 +10,36 @@ import * as path from 'path';
 import * as os from 'os';
 import * as fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
+import { Logger } from './logger';
 
 /**
  * Path utility class for cross-platform file operations
  */
 export class PathUtils {
+
+    /**
+     * Get the user configuration directory path
+     * @returns User config path or null if not available
+     */
+    public static getUserConfigPath(logger: Logger): string | null {
+        try {
+            // Try to get VS Code user data directory
+            const userDataPath = process.env.APPDATA || 
+                                process.env.HOME || 
+                                process.env.USERPROFILE;
+            
+            if (!userDataPath) {
+                return null;
+            }
+
+            // Create cmdpipe-specific config path
+            return path.join(userDataPath, '.vscode', 'cmdpipe', 'tasks');
+        } catch (error) {
+            logger.warn('Failed to determine user config path:', error);
+            return null;
+        }
+    }
+    
     // /**
     //  * Get the absolute path to the user's global task configuration directory
     //  * Uses VS Code's globalStorageUri for cross-platform compatibility
@@ -361,11 +386,11 @@ export class PathUtils {
     // }
 }
 
-// /**
-//  * Convenient path utility functions
-//  */
-// export const pathUtils = {
-//     // getUserConfigDirectory: () => PathUtils.getUserConfigDirectory(),
+/**
+ * Convenient path utility functions
+ */
+export const pathUtils = {
+    getUserConfigPath: (logger: Logger) => PathUtils.getUserConfigPath(logger),
 //     // getWorkspaceConfigDirectory: () => PathUtils.getWorkspaceConfigDirectory(),
 //     // getAllConfigPaths: () => PathUtils.getAllConfigPaths(),
 //     // normalizePath: (filePath: string) => PathUtils.normalizePath(filePath),
@@ -383,4 +408,4 @@ export class PathUtils {
 //     // pathToUri: (filePath: string) => PathUtils.pathToUri(filePath),
 //     // uriToPath: (uri: vscode.Uri) => PathUtils.uriToPath(uri),
 //     // getDisplayName: (filePath: string) => PathUtils.getDisplayName(filePath)
-// };
+};

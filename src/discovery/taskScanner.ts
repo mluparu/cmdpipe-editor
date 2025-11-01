@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import { TaskConfiguration, TaskDefinition, TaskSource, ValidationError } from '../types/configTypes';
 import { Logger } from '../utils/logger';
+import { pathUtils } from '../utils/pathUtils';
 
 /**
  * TaskScanner is responsible for discovering task configuration files
@@ -61,7 +62,7 @@ export class TaskScanner {
         const configurations: TaskConfiguration[] = [];
 
         try {
-            const userConfigPath = this.getUserConfigPath();
+            const userConfigPath = pathUtils.getUserConfigPath(this.logger);
             if (!userConfigPath) {
                 this.logger.debug('No user config path available');
                 return configurations;
@@ -249,28 +250,28 @@ export class TaskScanner {
         };
     }
 
-    /**
-     * Get the user configuration directory path
-     * @returns User config path or null if not available
-     */
-    private getUserConfigPath(): string | null {
-        try {
-            // Try to get VS Code user data directory
-            const userDataPath = process.env.APPDATA || 
-                                process.env.HOME || 
-                                process.env.USERPROFILE;
+    // /**
+    //  * Get the user configuration directory path
+    //  * @returns User config path or null if not available
+    //  */
+    // private getUserConfigPath(): string | null {
+    //     try {
+    //         // Try to get VS Code user data directory
+    //         const userDataPath = process.env.APPDATA || 
+    //                             process.env.HOME || 
+    //                             process.env.USERPROFILE;
             
-            if (!userDataPath) {
-                return null;
-            }
+    //         if (!userDataPath) {
+    //             return null;
+    //         }
 
-            // Create cmdpipe-specific config path
-            return path.join(userDataPath, '.vscode', 'cmdpipe', 'tasks');
-        } catch (error) {
-            this.logger.warn('Failed to determine user config path:', error);
-            return null;
-        }
-    }
+    //         // Create cmdpipe-specific config path
+    //         return path.join(userDataPath, '.vscode', 'cmdpipe', 'tasks');
+    //     } catch (error) {
+    //         this.logger.warn('Failed to determine user config path:', error);
+    //         return null;
+    //     }
+    // }
 
     /**
      * Extract line number from JSON parse error
