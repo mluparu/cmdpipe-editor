@@ -12,20 +12,20 @@ let extensionContext: ExtensionContext;
  * The extension is activated the very first time any command is executed
  */
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
-    const logger = Logger.getInstance('Shell Task Pipe');
+    const logger = Logger.getInstance('CmdPipe');
     
     try {
-        logger.info('Shell Task Pipe extension is being activated...');
-        
+        logger.info('CmdPipe extension is being activated...');
+    
         // Initialize extension context
-        const outputChannel = vscode.window.createOutputChannel('Shell Task Pipe');
+        const outputChannel = vscode.window.createOutputChannel('CmdPipe');
         extensionContext = {
             context,
             outputChannel
         };
 
         // Set up logging level based on configuration
-        const config = vscode.workspace.getConfiguration('shellTaskPipe');
+        const config = vscode.workspace.getConfiguration('cmdpipe');
         const logLevel = config.get<string>('logLevel', 'info');
         logger.setLevel(getLogLevelFromString(logLevel));
 
@@ -35,8 +35,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         
         // Add command handler to subscriptions for proper cleanup
         context.subscriptions.push(commandHandler);
-        
-        logger.info('Registered all shell task pipe commands');
+
+        logger.info('Registered all CmdPipe commands');
 
         // Register extension cleanup
         context.subscriptions.push(
@@ -46,15 +46,15 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             vscode.workspace.onDidChangeConfiguration(onConfigurationChanged)
         );
 
-        logger.info('Shell Task Pipe extension activated successfully');
+        logger.info('CmdPipe extension activated successfully');
         
         // Show activation message for development
         if (process.env.NODE_ENV === 'development') {
-            vscode.window.showInformationMessage('Shell Task Pipe extension activated!');
+            vscode.window.showInformationMessage('CmdPipe extension activated!');
         }
 
     } catch (error) {
-        logger.error('Failed to activate Shell Task Pipe extension', error as Error);
+        logger.error('Failed to activate CmdPipe extension', error as Error);
         await errorHandler.showError(
             error as Error,
             'Try reloading the window or reinstalling the extension'
@@ -70,12 +70,12 @@ export async function deactivate(): Promise<void> {
     const logger = Logger.getInstance();
     
     try {
-        logger.info('Shell Task Pipe extension is being deactivated...');
+        logger.info('CmdPipe extension is being deactivated...');
         
         // Clean up any running tasks or watchers here
         // This will be expanded as we add more functionality
         
-        logger.info('Shell Task Pipe extension deactivated successfully');
+        logger.info('CmdPipe extension deactivated successfully');
     } catch (error) {
         logger.error('Error during extension deactivation', error as Error);
     }
@@ -86,13 +86,13 @@ export async function deactivate(): Promise<void> {
  */
 function onConfigurationChanged(event: vscode.ConfigurationChangeEvent): void {
     const logger = Logger.getInstance();
-    
-    if (event.affectsConfiguration('shellTaskPipe')) {
-        logger.info('Shell Task Pipe configuration changed');
-        
+
+    if (event.affectsConfiguration('cmdpipe')) {
+        logger.info('CmdPipe configuration changed');
+
         // Update log level if changed
-        if (event.affectsConfiguration('shellTaskPipe.logLevel')) {
-            const config = vscode.workspace.getConfiguration('shellTaskPipe');
+        if (event.affectsConfiguration('cmdpipe.logLevel')) {
+            const config = vscode.workspace.getConfiguration('cmdpipe');
             const logLevel = config.get<string>('logLevel', 'info');
             logger.setLevel(getLogLevelFromString(logLevel));
             logger.info(`Log level updated to: ${logLevel}`);

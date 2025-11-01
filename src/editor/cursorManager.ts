@@ -134,6 +134,9 @@ export class CursorManager {
         else if (defaultInsertionMode === InsertionMode.REPLACE_SELECTION && selection.isEmpty) {
             insertionMode = InsertionMode.CURSOR;
         }
+        else if (!selection.isEmpty) {
+            insertionMode = InsertionMode.REPLACE_SELECTION;
+        }
 
         logger.debug(`Created OutputInsertionContext: mode=${insertionMode}, cursor=${cursorPosition.line}:${cursorPosition.character}, readonly=${isReadonly}`);
 

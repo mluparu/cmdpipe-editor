@@ -78,12 +78,12 @@ export class CommandHandler implements vscode.Disposable {
         // });
 
         this.registerCommand({
-            commandId: 'shellTaskPipe.showLogs',
+            commandId: 'cmdpipe.config.showLogs',
             handler: this.showLogs.bind(this),
             metadata: {
                 title: 'Show Logs',
                 description: 'Display extension logs',
-                category: 'Shell Task Pipe'
+                category: 'CmdPipe Config'
             }
         });
     }
@@ -93,32 +93,32 @@ export class CommandHandler implements vscode.Disposable {
      */
     private registerQuickCommands(): void {
         this.registerCommand({
-            commandId: 'shellTaskPipe.quickCommand',
+            commandId: 'cmdpipe.quickCommand',
             handler: this.quickCommand.bind(this),
             metadata: {
                 title: 'Quick Command',
                 description: 'Execute any shell command and insert output at cursor',
-                category: 'Quick Commands'
+                category: 'CmdPipe'
             }
         });
 
         this.registerCommand({
-            commandId: 'shellTaskPipe.executeSelection',
+            commandId: 'cmdpipe.executeSelection',
             handler: this.executeSelection.bind(this),
             metadata: {
                 title: 'Execute Selection',
                 description: 'Execute selected text as shell command',
-                category: 'Quick Commands'
+                category: 'CmdPipe'
             }
         });
 
         this.registerCommand({
-            commandId: 'shellTaskPipe.insertDateTime',
+            commandId: 'cmdpipe.insertDateTime',
             handler: this.insertDateTime.bind(this),
             metadata: {
                 title: 'Insert Date/Time',
                 description: 'Insert current date and time at cursor',
-                category: 'Quick Commands'
+                category: 'CmdPipe'
             }
         });
     }
@@ -128,62 +128,62 @@ export class CommandHandler implements vscode.Disposable {
      */
     private registerTaskPickerCommands(): void {
         this.registerCommand({
-            commandId: 'cmdpipe.showTaskPicker',
+            commandId: 'cmdpipe.runTask',
             handler: this.showTaskPicker.bind(this),
             metadata: {
-                title: 'Show Task Picker',
+                title: 'Run Task',
                 description: 'Show task picker to select and execute tasks',
-                category: 'Task Picker'
+                category: 'CmdPipe'
             }
         });
 
         this.registerCommand({
-            commandId: 'cmdpipe.refreshTasks',
+            commandId: 'cmdpipe.config.refreshTasks',
             handler: this.refreshTasks.bind(this),
             metadata: {
                 title: 'Refresh Tasks',
                 description: 'Refresh task configurations',
-                category: 'Task Picker'
+                category: 'CmdPipe Config'
             }
         });
 
         this.registerCommand({
-            commandId: 'cmdpipe.createWorkspaceTasks',
+            commandId: 'cmdpipe.config.createWorkspaceTasks',
             handler: this.createWorkspaceTasks.bind(this),
             metadata: {
                 title: 'Create Workspace Tasks',
                 description: 'Create tasks.json for workspace',
-                category: 'Task Picker'
+                category: 'CmdPipe Config'
             }
         });
 
         this.registerCommand({
-            commandId: 'cmdpipe.openUserConfig',
+            commandId: 'cmdpipe.config.openUserConfig',
             handler: this.openUserConfig.bind(this),
             metadata: {
                 title: 'Open User Config',
                 description: 'Open user configuration directory',
-                category: 'Task Picker'
+                category: 'CmdPipe Config'
             }
         });
 
         this.registerCommand({
-            commandId: 'cmdpipe.showTaskErrors',
+            commandId: 'cmdpipe.config.showTaskErrors',
             handler: this.showTaskErrors.bind(this),
             metadata: {
                 title: 'Show Task Errors',
                 description: 'Display task configuration errors',
-                category: 'Task Picker'
+                category: 'CmdPipe Config'
             }
         });
 
         this.registerCommand({
-            commandId: 'cmdpipe.validateTaskConfigs',
+            commandId: 'cmdpipe.config.validateTaskConfigs',
             handler: this.validateTaskConfigs.bind(this),
             metadata: {
                 title: 'Validate Task Configs',
                 description: 'Validate all task configurations',
-                category: 'Task Picker'
+                category: 'CmdPipe Config'
             }
         });
     }

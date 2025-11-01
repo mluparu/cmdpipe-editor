@@ -1,4 +1,4 @@
-# Shell Task Pipe Extension
+# CmdPipe Extension
 
 A VSCode extension that allows you to run arbitrary shell tasks and pipe their outputs directly into the editor at cursor position.
 
@@ -7,7 +7,7 @@ A VSCode extension that allows you to run arbitrary shell tasks and pipe their o
 - **Shell Command Execution**: Run any shell command from VSCode
 - **Text Insertion**: Insert command output directly at cursor position
 - **Multiple Insertion Modes**: Cursor, selection replacement, line-end, document-end
-- **Task Management**: Define reusable tasks with configuration
+- **Task Management**: Reuse tasks defined in .vscode/tasks.json
 - **Cross-Platform**: Works on Windows, macOS, and Linux
 - **Output Processing**: Format and filter command output
 - **Progress Tracking**: Visual feedback for running commands
@@ -33,37 +33,39 @@ A VSCode extension that allows you to run arbitrary shell tasks and pipe their o
 1. **Open Command Palette**: `Ctrl+Shift+P` (Windows/Linux) or `Cmd+Shift+P` (macOS)
 
 2. **Run a Quick Command**:
-   - Type: `Shell Task Pipe: Quick Echo`
-   - This will insert "Hello from Shell Task Pipe!" at your cursor
+   - Type: `CmdPipe: Quick Command`
+   - Type "echo Hello from CmdPipe!" in the prompt
+   - This will insert "Hello from CmdPipe!" at your cursor
 
-3. **Run a Custom Task**:
-   - Type: `Shell Task Pipe: Run Shell Task`
-   - Select from available tasks (examples included)
+3. **Run a Task**:
+   - Type: `CmdPipe: Run Task`
+   - Select from available tasks that are predefined in .vscode/tasks.json
 
 4. **Execute Selection**:
    - Select some text in your editor
-   - Type: `Shell Task Pipe: Execute Selection as Command`
+   - Type: `CmdPipe: Execute Selection as Command`
    - The selected text will be executed as a shell command
 
 ## Available Commands
 
 | Command | Description |
 |---------|-------------|
-| `Shell Task Pipe: Run Shell Task` | Show task picker and run selected task |
-| `Shell Task Pipe: Run Shell Task at Cursor` | Run task and insert output at cursor |
-| `Shell Task Pipe: Quick Echo` | Quick demo command |
-| `Shell Task Pipe: Quick Command` | Enter and run a custom command |
-| `Shell Task Pipe: Execute Selection as Command` | Execute selected text as command |
-| `Shell Task Pipe: Insert Date Time` | Insert current date and time |
-| `Shell Task Pipe: Open Configuration` | Open task configuration file |
-| `Shell Task Pipe: Reload Configuration` | Reload tasks from configuration |
-| `Shell Task Pipe: Show Logs` | View extension logs |
+| `CmdPipe: Run Task` | Show task picker and run selected task |
+| `CmdPipe: Quick Command` | Enter and run a custom shell command, insert output |
+| `CmdPipe: Execute Selection` | Execute selected text as shell command |
+| `CmdPipe: Insert Date/Time` | Insert current date and time at cursor |
+| `CmdPipe Config: Show Logs` | View extension logs |
+| `CmdPipe Config: Refresh Tasks` | Refresh task configurations |
+| `CmdPipe Config: Create Workspace Tasks` | Create tasks.json for workspace |
+| `CmdPipe Config: Open User Configuration` | Open user configuration directory |
+| `CmdPipe Config: Show Task Errors` | Display task configuration errors |
+| `CmdPipe Config: Validate Task Configurations` | Validate all task configurations |
 
 ## Configuration
 
 ### Task Configuration File
 
-Tasks are defined in `.vscode/shell-tasks.json`. Example:
+Tasks are defined in `.vscode/tasks.json`. Example:
 
 ```json
 {
@@ -74,7 +76,7 @@ Tasks are defined in `.vscode/shell-tasks.json`. Example:
       "name": "Hello World",
       "description": "Simple hello world command",
       "command": "echo",
-      "args": ["Hello from Shell Task Pipe!"],
+      "args": ["Hello from CmdPipe!"],
       "category": "utility",
       "timeout": 5000,
       "tags": ["demo", "test"]
@@ -85,18 +87,13 @@ Tasks are defined in `.vscode/shell-tasks.json`. Example:
 
 ### Task Properties
 
-- `id`: Unique identifier
-- `name`: Display name in task picker
-- `description`: Brief description
-- `command`: Shell command to execute
-- `args`: Command arguments (optional)
-- `category`: Category for organization
-- `timeout`: Execution timeout in milliseconds
-- `workingDirectory`: Working directory (supports `${workspaceFolder}`)
-- `platforms`: Supported platforms (`["win32", "darwin", "linux"]`)
-- `tags`: Tags for filtering and organization
-- `environmentVariables`: Custom environment variables
-- `outputProcessing`: Output formatting options
+// ...existing code...
+* `name`: Unique task name within its source
+* `command`: Shell command to execute
+* `description`: Human-readable description (optional)
+* `group`: Task group (build, test, etc.) (optional)
+* `args`: Command arguments (optional)
+* `options`: Task execution options (see below)
 
 ### VSCode Settings
 
@@ -104,15 +101,15 @@ Configure the extension in VSCode settings (`settings.json`):
 
 ```json
 {
-  "shellTaskPipe.defaultShell": "powershell.exe",
-  "shellTaskPipe.timeout": 30000,
-  "shellTaskPipe.maxOutputSize": 1048576,
-  "shellTaskPipe.outputFormat": "raw",
-  "shellTaskPipe.insertionMode": "cursor",
-  "shellTaskPipe.taskSources": [".vscode/shell-tasks.json"],
-  "shellTaskPipe.includeExampleTasks": true,
-  "shellTaskPipe.showNotifications": true,
-  "shellTaskPipe.confirmDangerousCommands": true
+  "cmdPipe.defaultShell": "powershell.exe",
+  "cmdPipe.timeout": 30000,
+  "cmdPipe.maxOutputSize": 1048576,
+  "cmdPipe.outputFormat": "raw",
+  "cmdPipe.insertionMode": "cursor",
+  "cmdPipe.taskSources": [".vscode/shell-tasks.json"],
+  "cmdPipe.includeExampleTasks": true,
+  "cmdPipe.showNotifications": true,
+  "cmdPipe.confirmDangerousCommands": true
 }
 ```
 
@@ -123,20 +120,20 @@ Configure the extension in VSCode settings (`settings.json`):
 1. **Open a new file** in VSCode
 2. **Place cursor** where you want output
 3. **Run Quick Echo**:
-   - Command Palette → `Shell Task Pipe: Quick Echo`
-   - Should insert "Hello from Shell Task Pipe!" at cursor
+   - Command Palette → `CmdPipe: Quick Echo`
+   - Should insert "Hello from CmdPipe!" at cursor
 4. **Run Custom Command**:
-   - Command Palette → `Shell Task Pipe: Quick Command`
+   - Command Palette → `CmdPipe: Quick Command`
    - Enter: `echo "Custom command works!"`
    - Press Enter
 
 ### Task Configuration Test
 
 1. **Open configuration**:
-   - Command Palette → `Shell Task Pipe: Open Configuration`
+   - Command Palette → `CmdPipe: Open Configuration`
    - Should open `.vscode/shell-tasks.json`
 2. **Run configured task**:
-   - Command Palette → `Shell Task Pipe: Run Shell Task`
+   - Command Palette → `CmdPipe: Run Shell Task`
    - Select "Hello World" or another task
    - Should execute and insert output
 
@@ -145,7 +142,7 @@ Configure the extension in VSCode settings (`settings.json`):
 1. **Type a command** in editor: `echo "Selected text execution"`
 2. **Select the text**
 3. **Execute selection**:
-   - Command Palette → `Shell Task Pipe: Execute Selection as Command`
+   - Command Palette → `CmdPipe: Execute Selection as Command`
    - Should execute the selected text as command
 
 ### Platform-Specific Tests
@@ -233,8 +230,8 @@ npm run lint
 
 ### Logs and Debugging
 
-- **View logs**: Command Palette → `Shell Task Pipe: Show Logs`
-- **Enable debug logging**: Set `"shellTaskPipe.logLevel": "debug"`
+- **View logs**: Command Palette → `CmdPipe: Show Logs`
+- **Enable debug logging**: Set `"cmdPipe.logLevel": "debug"`
 - **Check VSCode Developer Console**: `Help → Toggle Developer Tools`
 
 ## Contributing
@@ -242,8 +239,7 @@ npm run lint
 1. Fork the repository
 2. Create a feature branch
 3. Make changes with tests
-4. Run test suite: `npm test`
-5. Submit pull request
+4. Submit pull request
 
 ## License
 

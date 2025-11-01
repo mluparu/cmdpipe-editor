@@ -442,7 +442,6 @@ export class TaskPicker implements vscode.Disposable {
     //  * @returns User config path or null if not available
     //  */
     // private getUserConfigPath(): string | null {
-    //     // TODO: Avoid duplicated logic with TaskConfigManager and taskScanner
     //     try {
     //         const userDataPath = process.env.APPDATA || 
     //                             process.env.HOME || 

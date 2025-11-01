@@ -24,168 +24,141 @@
   "contributes": {
     "commands": [
       {
-        "command": "shellTaskPipe.runTask",
-        "title": "Run Shell Task",
-        "category": "Shell Task Pipe"
-      },
-      {
-        "command": "shellTaskPipe.openConfig",
-        "title": "Open Configuration",
-        "category": "Shell Task Pipe"
-      },
-      {
-        "command": "shellTaskPipe.reloadConfig",
-        "title": "Reload Configuration",
-        "category": "Shell Task Pipe"
-      },
-      {
-        "command": "shellTaskPipe.showLogs",
+        "command": "cmdpipe.config.showLogs",
         "title": "Show Logs",
-        "category": "Shell Task Pipe"
+        "category": "CmdPipe Config"
       },
       {
-        "command": "shellTaskPipe.quickCommand",
+        "command": "cmdpipe.quickCommand",
         "title": "Quick Command",
-        "category": "Shell Task Pipe"
+        "category": "CmdPipe"
       },
       {
-        "command": "shellTaskPipe.executeSelection",
+        "command": "cmdpipe.executeSelection",
         "title": "Execute Selection as Command",
-        "category": "Shell Task Pipe"
+        "category": "CmdPipe"
       },
       {
-        "command": "shellTaskPipe.insertDateTime",
+        "command": "cmdpipe.insertDateTime",
         "title": "Insert Date/Time",
-        "category": "Shell Task Pipe"
+        "category": "CmdPipe"
       },
       {
-        "command": "cmdpipe.showTaskPicker",
-        "title": "Show Task Picker",
+        "command": "cmdpipe.runTask",
+        "title": "Run Task",
         "category": "CmdPipe",
         "icon": "$(list-selection)"
       },
       {
-        "command": "cmdpipe.refreshTasks",
+        "command": "cmdpipe.config.refreshTasks",
         "title": "Refresh Tasks",
-        "category": "CmdPipe",
+        "category": "CmdPipe Config",
         "icon": "$(refresh)"
       },
       {
-        "command": "cmdpipe.createWorkspaceTasks",
+        "command": "cmdpipe.config.createWorkspaceTasks",
         "title": "Create Workspace Tasks",
-        "category": "CmdPipe",
+        "category": "CmdPipe Config",
         "icon": "$(new-file)"
       },
       {
-        "command": "cmdpipe.openUserConfig",
+        "command": "cmdpipe.config.openUserConfig",
         "title": "Open User Configuration",
-        "category": "CmdPipe",
+        "category": "CmdPipe Config",
         "icon": "$(folder-opened)"
       },
       {
-        "command": "cmdpipe.showTaskErrors",
+        "command": "cmdpipe.config.showTaskErrors",
         "title": "Show Task Errors",
-        "category": "CmdPipe",
+        "category": "CmdPipe Config",
         "icon": "$(error)"
       },
       {
-        "command": "cmdpipe.validateTaskConfigs",
+        "command": "cmdpipe.config.validateTaskConfigs",
         "title": "Validate Task Configurations",
-        "category": "CmdPipe",
+        "category": "CmdPipe Config",
         "icon": "$(check)"
       }
     ],
     "menus": {
       "commandPalette": [
         {
-          "command": "shellTaskPipe.runTask",
+          "command": "cmdpipe.config.showLogs",
           "when": "true"
         },
         {
-          "command": "shellTaskPipe.openConfig",
+          "command": "cmdpipe.quickCommand",
           "when": "true"
         },
         {
-          "command": "shellTaskPipe.reloadConfig",
+          "command": "cmdpipe.executeSelection",
           "when": "true"
         },
         {
-          "command": "shellTaskPipe.showLogs",
+          "command": "cmdpipe.insertDateTime",
           "when": "true"
         },
         {
-          "command": "shellTaskPipe.quickCommand",
+          "command": "cmdpipe.runTask",
           "when": "true"
         },
         {
-          "command": "shellTaskPipe.executeSelection",
+          "command": "cmdpipe.config.refreshTasks",
           "when": "true"
         },
         {
-          "command": "shellTaskPipe.insertDateTime",
+          "command": "cmdpipe.config.createWorkspaceTasks",
           "when": "true"
         },
         {
-          "command": "cmdpipe.showTaskPicker",
+          "command": "cmdpipe.config.openUserConfig",
           "when": "true"
         },
         {
-          "command": "cmdpipe.refreshTasks",
+          "command": "cmdpipe.config.showTaskErrors",
           "when": "true"
         },
         {
-          "command": "cmdpipe.createWorkspaceTasks",
-          "when": "true"
-        },
-        {
-          "command": "cmdpipe.openUserConfig",
-          "when": "true"
-        },
-        {
-          "command": "cmdpipe.showTaskErrors",
-          "when": "true"
-        },
-        {
-          "command": "cmdpipe.validateTaskConfigs",
+          "command": "cmdpipe.config.validateTaskConfigs",
           "when": "true"
         }
       ],
       "editor/context": [
         {
-          "command": "shellTaskPipe.quickCommand",
+          "command": "cmdpipe.quickCommand",
           "when": "editorTextFocus",
-          "group": "shellTaskPipe@1"
+          "group": "cmdpipe@1"
         },
         {
-          "command": "shellTaskPipe.executeSelection",
+          "command": "cmdpipe.executeSelection",
           "when": "editorHasSelection",
-          "group": "shellTaskPipe@2"
+          "group": "cmdpipe@2"
         },
         {
-          "command": "shellTaskPipe.insertDateTime",
+          "command": "cmdpipe.insertDateTime",
           "when": "editorTextFocus",
-          "group": "shellTaskPipe@3"
+          "group": "cmdpipe@3"
         }
       ]
     },
     "keybindings": [
       {
-        "command": "cmdpipe.showTaskPicker",
+        "command": "cmdpipe.runTask",
         "key": "ctrl+shift+t",
         "mac": "cmd+shift+t",
         "when": "true"
       }
     ],
     "configuration": {
-      "title": "Shell Task Pipe",
+      "title": "CmdPipe Configuration",
       "properties": {
-        "shellTaskPipe.configFile": {
+        "cmdpipe.configFile": {
           "type": "string",
           "default": ".vscode/shell-tasks.json",
           "description": "Path to the shell tasks configuration file relative to workspace root",
           "scope": "resource"
         },
-        "shellTaskPipe.timeout": {
+        "cmdpipe.timeout": {
           "type": "number",
           "default": 30000,
           "minimum": 1000,
@@ -193,7 +166,7 @@
           "description": "Default timeout for shell command execution in milliseconds",
           "scope": "resource"
         },
-        "shellTaskPipe.logLevel": {
+        "cmdpipe.logLevel": {
           "type": "string",
           "enum": [
             "debug",
@@ -205,7 +178,7 @@
           "description": "Logging level for the extension",
           "scope": "window"
         },
-        "shellTaskPipe.insertionMode": {
+        "cmdpipe.insertionMode": {
           "type": "string",
           "enum": [
             "replace-selection",
@@ -216,7 +189,7 @@
           "description": "How to handle output insertion in the editor",
           "scope": "resource"
         },
-        "shellTaskPipe.executeSelectionInsertionMode": {
+        "cmdpipe.executeSelectionInsertionMode": {
           "type": "string",
           "enum": [
             "replace-selection",
@@ -228,19 +201,19 @@
           "description": "How to handle output insertion when a shell command is executed based on the current selection in the editor",
           "scope": "resource"
         },
-        "shellTaskPipe.trimOutput": {
+        "cmdpipe.trimOutput": {
           "type": "boolean",
           "default": true,
           "description": "Whether to trim whitespace from command output before insertion",
           "scope": "resource"
         },
-        "shellTaskPipe.showNotifications": {
+        "cmdpipe.showNotifications": {
           "type": "boolean",
           "default": true,
           "description": "Whether to show notifications for task execution results",
           "scope": "window"
         },
-        "shellTaskPipe.maxOutputLength": {
+        "cmdpipe.maxOutputLength": {
           "type": "number",
           "default": 65536,
           "minimum": 100,
@@ -248,7 +221,7 @@
           "description": "Maximum length of command output to capture and insert",
           "scope": "resource"
         },
-        "shellTaskPipe.autoReloadConfig": {
+        "cmdpipe.autoReloadConfig": {
           "type": "boolean",
           "default": true,
           "description": "Whether to automatically reload configuration when the config file changes",
