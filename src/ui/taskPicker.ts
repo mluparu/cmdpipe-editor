@@ -4,6 +4,8 @@ import { TaskDefinition, TaskSource, TaskPickerItem, ValidationError } from '../
 import { Logger } from '../utils/logger';
 import { ThemeIcon } from 'vscode';
 import { pathUtils } from '../utils/pathUtils';
+import { TaskAvailability } from '../types/trustTypes';
+import { ITrustAwareTaskService } from '../config/trustAwareTaskService';
 
 /**
  * TaskPicker provides a VS Code QuickPick interface for selecting tasks
@@ -19,7 +21,10 @@ export class TaskPicker implements vscode.Disposable {
     private disposables: vscode.Disposable[] = [];
     private resolveSelection?: (task: TaskDefinition | undefined) => void;
 
-    constructor(private readonly taskConfigManager: TaskConfigManager) {}
+    constructor(
+        private readonly taskConfigManager: TaskConfigManager,
+        private readonly trustAwareTaskService: ITrustAwareTaskService
+    ) {}
 
     /**
      * Show the task picker interface and return selected task
@@ -55,7 +60,8 @@ export class TaskPicker implements vscode.Disposable {
                 }
 
                 // Populate with tasks
-                this.populateTaskItems(tasks);
+                const availability = this.trustAwareTaskService.mapToAvailability(tasks);
+                this.populateTaskItems(availability);
 
                 // Show the picker
                 this.quickPick.show();
@@ -217,7 +223,7 @@ export class TaskPicker implements vscode.Disposable {
      * Populate the quick pick with task items
      * @param tasks Array of resolved task definitions
      */
-    private populateTaskItems(tasks: TaskDefinition[]): void {
+    private populateTaskItems(availability: TaskAvailability[]): void {
         // Ensure quickPick is initialized before populating items
         if (!this.quickPick) {
             return;
@@ -226,8 +232,8 @@ export class TaskPicker implements vscode.Disposable {
         const items: (TaskPickerItem | vscode.QuickPickItem)[] = [];
 
         // Group tasks by source
-        const workspaceTasks = tasks.filter(task => task.source === TaskSource.WORKSPACE);
-        const userTasks = tasks.filter(task => task.source === TaskSource.USER);
+        const workspaceTasks = availability.filter(entry => entry.task.source === TaskSource.WORKSPACE);
+        const userTasks = availability.filter(entry => entry.task.source === TaskSource.USER);
 
         // Add workspace tasks section
         if (workspaceTasks.length > 0) {
@@ -236,8 +242,8 @@ export class TaskPicker implements vscode.Disposable {
                 kind: vscode.QuickPickItemKind.Separator
             });
 
-            for (const task of workspaceTasks) {
-                items.push(this.createTaskPickerItem(task));
+            for (const entry of workspaceTasks) {
+                items.push(this.createTaskPickerItem(entry));
             }
         }
 
@@ -248,8 +254,8 @@ export class TaskPicker implements vscode.Disposable {
                 kind: vscode.QuickPickItemKind.Separator
             });
 
-            for (const task of userTasks) {
-                items.push(this.createTaskPickerItem(task));
+            for (const entry of userTasks) {
+                items.push(this.createTaskPickerItem(entry));
             }
         }
 
@@ -261,16 +267,30 @@ export class TaskPicker implements vscode.Disposable {
      * @param task Task definition to convert
      * @returns Formatted picker item
      */
-    private createTaskPickerItem(task: TaskDefinition): TaskPickerItem {
-        const icon = task.source === TaskSource.WORKSPACE ? '$(tools)' : '$(person)';
+    private createTaskPickerItem(availability: TaskAvailability): TaskPickerItem {
+        const { task, isBlocked, blockReason } = availability;
+        const icon = isBlocked
+            ? '$(lock)'
+            : task.source === TaskSource.WORKSPACE
+                ? '$(tools)'
+                : '$(person)';
         const sourceLabel = task.source === TaskSource.WORKSPACE ? 'Workspace' : 'User';
-        
+        const groupLabel = task.group || 'general';
+        const descriptionSegments = [sourceLabel, groupLabel];
+
+        if (isBlocked) {
+            descriptionSegments.push('Blocked');
+        }
+
+        const description = descriptionSegments.join(' • ');
+        const detail = this.buildDetail(task, isBlocked, blockReason);
+
         return {
             label: `${icon} ${task.name}`,
-            description: `${sourceLabel} • ${task.group || 'general'}`,
-            detail: task.command + (task.args?.length ? ` ${task.args.join(' ')}` : ''),
-            task: task,
-            iconPath: undefined, // Using codicon in label instead
+            description,
+            detail,
+            task,
+            iconPath: undefined,
             buttons: [
                 {
                     iconPath: new ThemeIcon('info'),
@@ -284,6 +304,21 @@ export class TaskPicker implements vscode.Disposable {
                 }
             ]
         };
+    }
+
+    private buildDetail(task: TaskDefinition, isBlocked: boolean, blockReason?: string): string {
+        const commandLine = task.command + (task.args?.length ? ` ${task.args.join(' ')}` : '');
+
+        if (!isBlocked) {
+            return commandLine;
+        }
+
+        const reason = blockReason === 'undecided'
+            ? 'Grant workspace trust to run this task.'
+            : 'Workspace trust was declined. Review trust settings to run this task.';
+
+        return `${commandLine}
+${reason}`;
     }
 
     // /**

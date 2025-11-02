@@ -14,6 +14,8 @@ export const window = {
     showTextDocument: jest.fn()
 };
 
+const trustListeners: Array<() => void> = [];
+
 export const workspace = {
     workspaceFolders: undefined,
     getConfiguration: jest.fn().mockReturnValue({
@@ -28,7 +30,31 @@ export const workspace = {
         writeFile: jest.fn()
     },
     applyEdit: jest.fn().mockResolvedValue(true),
-    openTextDocument: jest.fn()
+    openTextDocument: jest.fn(),
+    isTrusted: true,
+    onDidGrantWorkspaceTrust: jest.fn((listener: () => void) => {
+        trustListeners.push(listener);
+        const disposable = {
+            dispose: jest.fn(() => {
+                const index = trustListeners.indexOf(listener);
+                if (index >= 0) {
+                    trustListeners.splice(index, 1);
+                }
+            })
+        };
+        return disposable;
+    }),
+    __setTrustState: (trusted: boolean) => {
+        workspace.isTrusted = trusted;
+    },
+    __fireGrantWorkspaceTrust: () => {
+        workspace.isTrusted = true;
+        trustListeners.forEach((listener) => listener());
+    },
+    __resetTrustMock: () => {
+        workspace.isTrusted = true;
+        trustListeners.splice(0, trustListeners.length);
+    }
 };
 
 export const commands = {

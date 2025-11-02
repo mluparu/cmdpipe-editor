@@ -7,8 +7,12 @@ import { TaskPicker } from '../ui/taskPicker';
 import { TaskConfigManager } from '../config/taskConfigManager';
 import { TaskDefinition, TaskExecutionResult } from '../types/taskTypes';
 import { CommandRegistry, CommandRegistration, CommandMetadata, OutputInsertionContext } from '../types/extensionTypes';
+import { TrustGuard, TrustViolationError } from '../discovery/trustGuard';
 import { Logger } from '../utils/logger';
 import { ErrorHandler } from '../utils/errorHandler';
+import { ISecurityWarningPresenter, SecurityWarningPresenter, WarningActionResult } from '../ui/trustWarningPresenter';
+import { WarningMessageModel, TrustContext, TrustState } from '../types/trustTypes';
+import { TrustAwareTaskService } from '../config/trustAwareTaskService';
 
 /**
  * Unified command handler that manages all extension commands
@@ -25,6 +29,11 @@ export class CommandHandler implements vscode.Disposable {
     private currentTaskPicker?: TaskPicker;
     private commandRegistry: CommandRegistry = new Map();
     private disposables: vscode.Disposable[] = [];
+    private trustGuard: TrustGuard;
+    private trustAwareTaskService: TrustAwareTaskService;
+    private warningPresenter: ISecurityWarningPresenter;
+    private pendingWarning?: Promise<WarningActionResult>;
+    private lastWarningKey?: string;
 
     private constructor() {
         this.logger = Logger.getInstance();
@@ -34,6 +43,11 @@ export class CommandHandler implements vscode.Disposable {
         this.cursorManager = CursorManager.getInstance();
         this.textInsertion = TextInsertion.getInstance();
         this.taskConfigManager = new TaskConfigManager();
+        this.warningPresenter = new SecurityWarningPresenter();
+        this.trustGuard = new TrustGuard();
+        this.trustAwareTaskService = new TrustAwareTaskService(this.trustGuard);
+        const trustDisposables = this.trustGuard.registerTrustListeners();
+        this.disposables.push(...trustDisposables);
         this.setupFileWatching();
     }
 
@@ -709,7 +723,7 @@ export class CommandHandler implements vscode.Disposable {
                     args: [],
                     category: 'utility',
                     workingDirectory: vscode.workspace.workspaceFolders?.[0]?.uri.fsPath
-                }
+                };
                 const result = await this.shellExecutor.executeTaskWithOutput(task);
 
                 if (token.isCancellationRequested) {
@@ -768,7 +782,7 @@ export class CommandHandler implements vscode.Disposable {
             {
                 // Create or reuse task picker
                 if (!this.currentTaskPicker) {
-                    this.currentTaskPicker = new TaskPicker(this.taskConfigManager);
+                    this.currentTaskPicker = new TaskPicker(this.taskConfigManager, this.trustAwareTaskService);
                 }
             
                 // Show task picker and get selected task
@@ -776,11 +790,19 @@ export class CommandHandler implements vscode.Disposable {
             }
             
             if (selectedTask && context) {
+                const canExecute = await this.guardTaskExecution(selectedTask);
+                if (!canExecute) {
+                    return;
+                }
                 // Convert config task to execution task
                 const executionTask = this.convertConfigTaskToExecutionTask(selectedTask);
                 await this.executeTaskWithNewContext(executionTask, context);
             } 
             else if (selectedTask && !context) {
+                const canExecute = await this.guardTaskExecution(selectedTask);
+                if (!canExecute) {
+                    return;
+                }
                 // No editor context - show in output panel
                 vscode.window.showInformationMessage('No active editor found. Task output will be shown in output panel.');
                 const executionTask = this.convertConfigTaskToExecutionTask(selectedTask);
@@ -804,6 +826,7 @@ export class CommandHandler implements vscode.Disposable {
             description: configTask.description,
             command: configTask.command,
             args: configTask.args,
+            source: configTask.source,
             workingDirectory: configTask.options?.cwd,
             environmentVariables: configTask.options?.env,
             category: 'custom',
@@ -816,6 +839,86 @@ export class CommandHandler implements vscode.Disposable {
                 maxOutputLength: 10000
             }
         };
+    }
+
+    private async guardTaskExecution(configTask: import('../types/configTypes').TaskDefinition): Promise<boolean> {
+        try {
+            await this.trustGuard.ensureCanExecute(configTask);
+            return true;
+        } catch (error) {
+            if (error instanceof TrustViolationError) {
+                await this.presentTrustWarning(configTask, error);
+                return false;
+            }
+
+            throw error;
+        }
+    }
+
+    private async presentTrustWarning(
+        configTask: import('../types/configTypes').TaskDefinition,
+        violation: TrustViolationError
+    ): Promise<void> {
+        const context = this.trustGuard.getCurrentContext();
+        const warningKey = `${configTask.name}:${context.state}`;
+        const warningModel = this.buildWarningModel(configTask.name, violation, context);
+
+        // Avoid showing duplicate warnings
+        // If a warning is already being shown for the same task and context, wait for it to finish
+        if (this.pendingWarning && this.lastWarningKey === warningKey) {
+            await this.pendingWarning;
+            return;
+        }
+
+        const pending = this.warningPresenter.showTaskBlockedWarning(warningModel);
+        const tracked = pending.finally(() => {
+            if (this.pendingWarning === tracked) {
+                this.pendingWarning = undefined;
+                this.lastWarningKey = undefined;
+            }
+        });
+
+        this.pendingWarning = tracked;
+        this.lastWarningKey = warningKey;
+
+        // Wait for the warning to be dismissed before proceeding
+        await tracked;
+    }
+
+    private buildWarningModel(
+        taskName: string,
+        violation: TrustViolationError,
+        context: TrustContext
+    ): WarningMessageModel {
+        const title = `Task "${taskName}" is blocked by workspace trust`;
+        const trustDescription = this.describeTrustState(context.state);
+        const detail = `${violation.message} Current workspace trust state: ${trustDescription}. Select "Trust Workspace" to review trust settings or "View User Tasks" to work with tasks you control.`;
+
+        return {
+            title,
+            detail,
+            primaryAction: {
+                label: 'Trust Workspace',
+                command: 'workbench.action.manageTrustedFolders'
+            },
+            secondaryAction: {
+                label: 'View User Tasks',
+                command: 'cmdpipe.config.openUserConfig'
+            },
+            telemetryId: `blocked-${taskName}-${context.state}`
+        };
+    }
+
+    private describeTrustState(state: TrustState): string {
+        switch (state) {
+            case 'trusted':
+                return 'trusted';
+            case 'untrusted':
+                return 'untrusted (workspace trust declined)';
+            case 'undecided':
+            default:
+                return 'undecided (trust not granted yet)';
+        }
     }
 
     /**

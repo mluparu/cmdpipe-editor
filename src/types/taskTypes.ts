@@ -11,6 +11,9 @@ export interface TaskDefinition {
     
     /** Display name shown in command palette */
     name: string;
+
+    /** Source classification for trust and UI handling */
+    source?: TaskSource;
     
     /** Brief description of what the task does */
     description?: string;

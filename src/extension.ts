@@ -36,6 +36,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         // Add command handler to subscriptions for proper cleanup
         context.subscriptions.push(commandHandler);
 
+        const trustRefreshDisposable = vscode.workspace.onDidGrantWorkspaceTrust(() => {
+            commandHandler.refreshTasks().catch(() => undefined);
+        });
+        context.subscriptions.push(trustRefreshDisposable);
+
         logger.info('Registered all CmdPipe commands');
 
         // Register extension cleanup

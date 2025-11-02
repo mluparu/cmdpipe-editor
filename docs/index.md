@@ -12,3 +12,10 @@
 | cmdpipe.config.openUserConfig  | Open user configuration directory                | commandHandler.ts |
 | cmdpipe.config.showTaskErrors  | Display task configuration errors                | commandHandler.ts |
 | cmdpipe.config.validateTaskConfigs | Validate all task configurations             | commandHandler.ts |
+
+## Workspace Trust Safeguards
+
+- Workspace-defined tasks are automatically blocked when VS Code marks the workspace as untrusted or undecided.
+- User-defined tasks remain runnable and are surfaced separately in the task picker for quick access.
+- Blocked workspace tasks display a lock icon and guidance in the picker so the restriction is clear before execution.
+- Choosing a blocked task opens trust management actions; the full onboarding workflow is described in `specs/004-block-untrusted-tasks/quickstart.md`.

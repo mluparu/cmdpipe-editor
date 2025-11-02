@@ -1,11 +1,15 @@
 {
-  "name": "shell-task-pipe",
-  "displayName": "Shell Task Pipe",
-  "description": "Run arbitrary shell tasks and pipe their outputs directly into the editor at cursor position",
+  "name": "cmd-pipe",
+  "displayName": "Command/Task Pipe",
+  "description": "Run shell tasks defined in tasks.json and pipe their outputs directly into the editor at cursor position",
   "version": "0.1.0",
   "publisher": "Marian Luparu",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mluparu/cmdpipe-editor.git"
+  },
   "engines": {
-    "vscode": "^1.74.0"
+    "vscode": "^1.70.0"
   },
   "categories": [
     "Other"
@@ -15,7 +19,11 @@
     "tasks",
     "command",
     "automation",
-    "productivity"
+    "productivity",
+    "pipe",
+    "task runner",
+    "cmdpipe",
+    "editor"
   ],
   "activationEvents": [
     "onStartupFinished"
