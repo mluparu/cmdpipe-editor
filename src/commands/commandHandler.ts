@@ -899,7 +899,7 @@ export class CommandHandler implements vscode.Disposable {
             detail,
             primaryAction: {
                 label: 'Trust Workspace',
-                command: 'workbench.action.manageTrustedFolders'
+                command: 'workbench.trust.manage'
             },
             secondaryAction: {
                 label: 'View User Tasks',

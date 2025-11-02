@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Shell Task Pipe Configuration Schema",
+  "title": "Cmd Task Pipe Configuration Schema",
   "description": "Schema for validating shell task configuration files with task picker automation support",
   "type": "object",
   "properties": {

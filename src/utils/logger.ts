@@ -48,7 +48,7 @@ export class Logger implements ILogger {
     private _logLevel: LogLevel = LogLevel.INFO;
     private _extensionName: string;
 
-    private constructor(extensionName: string = 'Shell Task Pipe') {
+    private constructor(extensionName: string = 'CmdPipe: Run Task in Editor') {
         this._extensionName = extensionName;
         this._outputChannel = vscode.window.createOutputChannel(extensionName);
     }

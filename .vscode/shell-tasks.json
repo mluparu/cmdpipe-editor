@@ -6,7 +6,7 @@
       "name": "Hello World",
       "description": "Simple hello world command to test the extension",
       "command": "echo",
-      "args": ["Hello from Shell Task Pipe!"],
+      "args": ["Hello from Cmd Task Pipe!"],
       "category": "utility",
       "timeout": 5000,
       "tags": ["demo", "hello", "test"]

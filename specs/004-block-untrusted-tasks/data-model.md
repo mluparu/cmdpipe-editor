@@ -49,7 +49,7 @@ The feature builds on existing cmdpipe task entities. Instead of introducing par
 - **Fields**:
   - `title: string` — headline text referencing task name.
   - `detail: string` — explanation referencing trust requirement.
-  - `primaryAction: { label: string; command: 'workbench.action.manageTrustedFolders' }` — navigates to trust management.
+  - `primaryAction: { label: string; command: 'workbench.trust.manage' }` — navigates to trust management.
   - `secondaryAction?: { label: string; command: 'cmdpipe.config.openUserConfig' }` — optional fallback.
   - `telemetryId: string` — key to correlate user response with log entry (local only for now).
 - **Relationships**: Constructed on-demand inside command handler when a block occurs.

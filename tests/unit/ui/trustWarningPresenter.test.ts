@@ -16,7 +16,7 @@ describe('SecurityWarningPresenter', () => {
             detail: 'Workspace trust is required before workspace tasks can execute. Current state: untrusted.',
             primaryAction: {
                 label: 'Trust Workspace',
-                command: 'workbench.action.manageTrustedFolders'
+                command: 'workbench.trust.manage'
             },
             secondaryAction: {
                 label: 'View User Tasks',

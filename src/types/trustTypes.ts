@@ -49,7 +49,7 @@ export interface WarningMessageModel {
     /** Primary action encouraging workspace trust management */
     primaryAction: {
         label: string;
-        command: 'workbench.action.manageTrustedFolders';
+        command: 'workbench.trust.manage';
     };
     /** Optional secondary action linking to user task management */
     secondaryAction?: {
