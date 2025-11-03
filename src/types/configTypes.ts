@@ -5,7 +5,9 @@
  * and task discovery functionality.
  */
 
-import { IconPath } from "vscode";
+import type { ThemeIcon, Uri } from "vscode";
+
+export type IconPath = Uri | { light: Uri; dark: Uri } | ThemeIcon;
 
 /**
  * Enum representing the source location of a task configuration

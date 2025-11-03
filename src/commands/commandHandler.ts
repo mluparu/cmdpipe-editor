@@ -591,6 +591,8 @@ export class CommandHandler implements vscode.Disposable {
 
             // Get current editor context
             // TODO: For selection execution, we want the default insertion to be "append below selection"
+            // More specifically in the example "echo Hello" the outputted text should be "> echo Hello\nHello"
+            // i.e. prepend the executed command to the result
             const context = this.cursorManager.createOutputInsertionContext();
             if (!context) {
                 vscode.window.showErrorMessage('Unable to create insertion context');

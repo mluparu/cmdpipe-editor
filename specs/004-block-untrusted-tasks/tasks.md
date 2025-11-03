@@ -138,5 +138,5 @@ code tests/integration/taskTrustExecution.test.ts
 
 ## Next steps to consider
 
-- [ ] Restore the shell/editor APIs (or update their tests) so the global Jest run can pass, fulfilling T020.
-- [ ] Decide whether to extend the VS Code mock so __fireGrantWorkspaceTrust() triggers listeners; current tests invoke the captured listener directly.
+- [ ] TODO: Restore the shell/editor APIs (or update their tests) so the global Jest run can pass, fulfilling T020.
+- [ ] TODO: Decide whether to extend the VS Code mock so __fireGrantWorkspaceTrust() triggers listeners; current tests invoke the captured listener directly.

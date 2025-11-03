@@ -13,20 +13,27 @@ A VSCode extension that allows you to run arbitrary shell tasks and pipe their o
 - **Progress Tracking**: Visual feedback for running commands
 - **Notifications**: User-friendly feedback system
 
-## Installation
+## Available Commands
 
-1. Build the extension:
-   ```bash
-   npm run compile
-   ```
+| Command | Description | Command ID |
+|---------|-------------|------------|
+| `CmdPipe: Run Task` | Show task picker and run selected task | cmdpipe.runTask |
+| `CmdPipe: Quick Command` | Enter and run a custom shell command and insert output | cmdpipe.quickCommand |
+| `CmdPipe: Execute Selection` | Execute selected text as shell command | cmdpipe.executeSelection |
+| `CmdPipe: Insert Date/Time` | Insert current date and time at cursor | cmdpipe.insertDateTime |
+| `CmdPipe Config: Show Logs` | View extension logs | cmdpipe.config.showLogs |
+| `CmdPipe Config: Refresh Tasks` | Refresh task configurations | cmdpipe.config.refreshTasks |
+| `CmdPipe Config: Create Workspace Tasks` | Create tasks.json for workspace | cmdpipe.config.createWorkspaceTasks |
+| `CmdPipe Config: Open User Configuration` | Open user configuration directory | cmdpipe.config.openUserConfig |
+| `CmdPipe Config: Show Task Errors` | Display task configuration errors | cmdpipe.config.showTaskErrors |
+| `CmdPipe Config: Validate Task Configurations` | Validate all task configurations | cmdpipe.config.validateTaskConfigs |
 
-2. Package the extension (optional):
-   ```bash
-   npm install -g vsce
-   vsce package
-   ```
+## Workspace Trust Safeguards
 
-3. Install in VSCode via the Extensions panel or by opening the `.vsix` file
+- Workspace-defined tasks are automatically blocked when VS Code marks the workspace as untrusted or undecided.
+- User-defined tasks remain runnable and are surfaced separately in the task picker for quick access.
+- Blocked workspace tasks display a lock icon and guidance in the picker so the restriction is clear before execution.
+- Choosing a blocked task opens trust management actions
 
 ## Quick Start
 
@@ -46,201 +53,73 @@ A VSCode extension that allows you to run arbitrary shell tasks and pipe their o
    - Type: `CmdPipe: Execute Selection as Command`
    - The selected text will be executed as a shell command
 
-## Available Commands
+## Run Task Command
 
-| Command | Description |
-|---------|-------------|
-| `CmdPipe: Run Task` | Show task picker and run selected task |
-| `CmdPipe: Quick Command` | Enter and run a custom shell command, insert output |
-| `CmdPipe: Execute Selection` | Execute selected text as shell command |
-| `CmdPipe: Insert Date/Time` | Insert current date and time at cursor |
-| `CmdPipe Config: Show Logs` | View extension logs |
-| `CmdPipe Config: Refresh Tasks` | Refresh task configurations |
-| `CmdPipe Config: Create Workspace Tasks` | Create tasks.json for workspace |
-| `CmdPipe Config: Open User Configuration` | Open user configuration directory |
-| `CmdPipe Config: Show Task Errors` | Display task configuration errors |
-| `CmdPipe Config: Validate Task Configurations` | Validate all task configurations |
+The `cmdpipe.runTask` command opens a task picker that allows you to select and execute tasks defined in your workspace or user configuration. The output of the executed task is inserted at the current cursor position in the active editor.
 
-## Configuration
+### Example: Mapping `cmdpipe.runTask` to exeute a specific task for a shortcut key
 
-### Task Configuration File
-
-Tasks are defined in `.vscode/tasks.json`. Example:
+You can add a custom keyboard shortcut for the `cmdpipe.runTask` command in your `keybindings.json`:
 
 ```json
 {
-  "version": "1.0.0",
-  "tasks": [
-    {
-      "id": "hello-world",
-      "name": "Hello World",
-      "description": "Simple hello world command",
-      "command": "echo",
-      "args": ["Hello from CmdPipe!"],
-      "category": "utility",
-      "timeout": 5000,
-      "tags": ["demo", "test"]
-    }
-  ]
+    "key": "alt+shift+m",
+    "command": "cmdpipe.runTask",
+    "args": "active-meeting-header"
 }
 ```
+This binds `Alt+Shift+M` to execute the `active-meeting-header` task and insert its output at your cursor position.
 
-### Task Properties
+The `args` parameter specifies the name of the task to execute. If omitted, the task picker will be shown to select a task interactively.
 
-// ...existing code...
-* `name`: Unique task name within its source
-* `command`: Shell command to execute
-* `description`: Human-readable description (optional)
-* `group`: Task group (build, test, etc.) (optional)
-* `args`: Command arguments (optional)
-* `options`: Task execution options (see below)
+The task must be defined in your workspace's `tasks.json` or in the user configuration for it to be available for execution.
 
-### VSCode Settings
+## Insert Date and Time
 
-Configure the extension in VSCode settings (`settings.json`):
+The `cmdpipe.insertDateTime` command inserts the current date and time at the cursor position. This is useful for quickly adding timestamps to documents or notes.
+
+The command can be bound to a keyboard shortcut for faster access. The format of the inserted date and time can be customized in the extension settings. The command supports multiple date and time formats, including ISO, locale-specific, and custom formats defined by the user.
+
+Valid formats: `iso`, `local`, `date`, `time`, `us-date`, `eu-date`, `long`, `short`, `timestamp`, `custom`
+
+### Example: Mapping `cmdpipe.insertDateTime` to a Shortcut Key
+
+You can add a custom keyboard shortcut for the `cmdpipe.insertDateTime` command in your `keybindings.json`:
 
 ```json
 {
-  "cmdPipe.defaultShell": "powershell.exe",
-  "cmdPipe.timeout": 30000,
-  "cmdPipe.maxOutputSize": 1048576,
-  "cmdPipe.outputFormat": "raw",
-  "cmdPipe.insertionMode": "cursor",
-  "cmdPipe.taskSources": [".vscode/shell-tasks.json"],
-  "cmdPipe.includeExampleTasks": true,
-  "cmdPipe.showNotifications": true,
-  "cmdPipe.confirmDangerousCommands": true
+    "key": "alt+shift+d",
+    "command": "cmdpipe.insertDateTime",
+    "args": "us-date"
+}
+{
+    "key": "alt+shift+c",
+    "command": "cmdpipe.insertDateTime",
+    "args": "time",
 }
 ```
 
-## Testing the Extension
+This binds `Alt+Shift+D` to insert the current date in the `us-date` format at your cursor position and `Alt+Shift+C` to insert the current time.
 
-### Basic Workflow Test
+## Quick Command Execution
 
-1. **Open a new file** in VSCode
-2. **Place cursor** where you want output
-3. **Run Quick Echo**:
-   - Command Palette → `CmdPipe: Quick Echo`
-   - Should insert "Hello from CmdPipe!" at cursor
-4. **Run Custom Command**:
-   - Command Palette → `CmdPipe: Quick Command`
-   - Enter: `echo "Custom command works!"`
-   - Press Enter
+The `cmdpipe.quickCommand` command allows you to execute any shell command and insert its output directly at the cursor position in the active editor. This is useful for quickly running commands without leaving the editor context.
 
-### Task Configuration Test
+## Execute Selection Command
 
-1. **Open configuration**:
-   - Command Palette → `CmdPipe: Open Configuration`
-   - Should open `.vscode/shell-tasks.json`
-2. **Run configured task**:
-   - Command Palette → `CmdPipe: Run Shell Task`
-   - Select "Hello World" or another task
-   - Should execute and insert output
+The `cmdpipe.executeSelection` command executes the currently selected text in the active editor as a shell command and inserts the output at the cursor position. This is particularly useful for running snippets of code or commands directly from your document similar to a REPL environment like Notebook cells.
 
-### Selection Execution Test
+## Configuration and Management Commands
 
-1. **Type a command** in editor: `echo "Selected text execution"`
-2. **Select the text**
-3. **Execute selection**:
-   - Command Palette → `CmdPipe: Execute Selection as Command`
-   - Should execute the selected text as command
+The extension provides several commands to manage and configure its behavior:
+- `cmdpipe.config.showLogs`: Opens the extension's log output for debugging and monitoring.
+- `cmdpipe.config.refreshTasks`: Refreshes the task configurations from the workspace and user settings.
+- `cmdpipe.config.createWorkspaceTasks`: Creates a default `tasks.json` file in the workspace if it doesn't exist.
+- `cmdpipe.config.showTaskErrors`: Displays any errors found in the task configurations.
+- `cmdpipe.config.validateTaskConfigs`: Validates all task configurations and reports any issues.
 
-### Platform-Specific Tests
-
-#### Windows
-- Test: `dir` command for file listing
-- Test: `echo %date% %time%` for date/time
-- Test: `systeminfo` for system information
-
-#### macOS/Linux
-- Test: `ls -la` command for file listing
-- Test: `date` for current date/time
-- Test: `uname -a` for system information
-
-### Error Handling Tests
-
-1. **Invalid command**:
-   - Run: `nonexistentcommand123`
-   - Should show error notification
-2. **Timeout test**:
-   - Run command that takes longer than timeout
-   - Should handle timeout gracefully
-3. **Permission test**:
-   - Try running restricted commands
-   - Should handle permissions appropriately
-
-## Development
-
-### Build and Test
-
-```bash
-# Install dependencies
-npm install
-
-# Compile TypeScript
-npm run compile
-
-# Run tests
-npm test
-
-# Watch mode for development
-npm run watch
-
-# Lint code
-npm run lint
-```
-
-### Test Suite
-
-- **Unit Tests**: 63 tests covering core components
-- **Integration Tests**: 25 tests for workflow validation
-- **All Tests**: 88 tests total with 100% pass rate
-
-### Architecture
-
-- **Shell Execution**: Cross-platform shell command execution
-- **Text Insertion**: Multiple insertion modes with cursor management
-- **Configuration**: JSON-based task definitions with validation
-- **UI Components**: Status bar, progress tracking, notifications
-- **Error Handling**: Comprehensive error handling and logging
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Commands not found**:
-   - Check PATH environment variable
-   - Ensure shell is properly configured
-   - Try absolute paths for commands
-
-2. **Permission denied**:
-   - Check file/directory permissions
-   - Run VSCode with appropriate privileges
-   - Verify command accessibility
-
-3. **Timeout errors**:
-   - Increase timeout in configuration
-   - Check command efficiency
-   - Verify network connectivity for network commands
-
-4. **Output not appearing**:
-   - Check cursor position
-   - Verify editor is active and writable
-   - Check insertion mode settings
-
-### Logs and Debugging
-
-- **View logs**: Command Palette → `CmdPipe: Show Logs`
-- **Enable debug logging**: Set `"cmdPipe.logLevel": "debug"`
-- **Check VSCode Developer Console**: `Help → Toggle Developer Tools`
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make changes with tests
-4. Submit pull request
+To learn more about configuring the extension, see the [Configuration](docs/index.md#configuration) section in the documentation.
 
 ## License
 
-MIT License - see LICENSE file for details.
+MIT License - see [LICENSE](LICENSE.md) file for details.

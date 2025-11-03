@@ -96,7 +96,6 @@ export interface TaskExecutionResult {
     
     /** Standard output from the command */
     output: Buffer;
-    // TODO: Make this output binary always and handle encoding in OutputProcessor
     
     /** Standard error from the command */
     stderr?: Buffer;
