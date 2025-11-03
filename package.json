@@ -2,8 +2,8 @@
   "name": "cmd-pipe",
   "displayName": "Command/Task Pipe",
   "description": "Run shell tasks defined in tasks.json and pipe their outputs directly into the editor at cursor position",
-  "version": "0.1.0",
-  "publisher": "Marian Luparu",
+  "version": "0.1.1",
+  "publisher": "MarianLuparuMSFT",
   "repository": {
     "type": "git",
     "url": "https://github.com/mluparu/cmdpipe-editor.git"
@@ -272,6 +272,6 @@
     "ajv": "^8.12.0",
     "ajv-formats": "^2.1.1",
     "chokidar": "^3.5.3",
-    "uuid": "^13.0.0"
+    "uuid": "^9.0.1"
   }
 }
