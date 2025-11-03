@@ -17,16 +17,16 @@ A VSCode extension that allows you to run arbitrary shell tasks and pipe their o
 
 | Command | Description | Command ID |
 |---------|-------------|------------|
-| `CmdPipe: Run Task` | Show task picker and run selected task | cmdpipe.runTask |
-| `CmdPipe: Quick Command` | Enter and run a custom shell command and insert output | cmdpipe.quickCommand |
-| `CmdPipe: Execute Selection` | Execute selected text as shell command | cmdpipe.executeSelection |
-| `CmdPipe: Insert Date/Time` | Insert current date and time at cursor | cmdpipe.insertDateTime |
-| `CmdPipe Config: Show Logs` | View extension logs | cmdpipe.config.showLogs |
-| `CmdPipe Config: Refresh Tasks` | Refresh task configurations | cmdpipe.config.refreshTasks |
-| `CmdPipe Config: Create Workspace Tasks` | Create tasks.json for workspace | cmdpipe.config.createWorkspaceTasks |
-| `CmdPipe Config: Open User Configuration` | Open user configuration directory | cmdpipe.config.openUserConfig |
-| `CmdPipe Config: Show Task Errors` | Display task configuration errors | cmdpipe.config.showTaskErrors |
-| `CmdPipe Config: Validate Task Configurations` | Validate all task configurations | cmdpipe.config.validateTaskConfigs |
+| `CmdPipe: Run Task` | Show task picker and run selected task | `cmdpipe.runTask` |
+| `CmdPipe: Quick Command` | Enter and run a custom shell command and insert output | `cmdpipe.quickCommand` |
+| `CmdPipe: Execute Selection` | Execute selected text as shell command | `cmdpipe.executeSelection` |
+| `CmdPipe: Insert Date/Time` | Insert current date and time at cursor | `cmdpipe.insertDateTime` |
+| `CmdPipe Config: Show Logs` | View extension logs | `cmdpipe.config.showLogs` |
+| `CmdPipe Config: Refresh Tasks` | Refresh task configurations | `cmdpipe.config.refreshTasks` |
+| `CmdPipe Config: Create Workspace Tasks` | Create tasks.json for workspace | `cmdpipe.config.createWorkspaceTasks` |
+| `CmdPipe Config: Open User Configuration` | Open user configuration directory | `cmdpipe.config.openUserConfig` |
+| `CmdPipe Config: Show Task Errors` | Display task configuration errors | `cmdpipe.config.showTaskErrors` |
+| `CmdPipe Config: Validate Task Configurations` | Validate all task configurations | `cmdpipe.config.validateTaskConfigs` |
 
 ## Workspace Trust Safeguards
 
@@ -122,4 +122,4 @@ To learn more about configuring the extension, see the [Configuration](docs/inde
 
 ## License
 
-MIT License - see [LICENSE](LICENSE.md) file for details.
+MIT License - see [LICENSE](LICENSE) file for details.
