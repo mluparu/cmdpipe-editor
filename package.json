@@ -268,10 +268,8 @@
     "typescript": "^5.1.6"
   },
   "dependencies": {
-    "@types/uuid": "^10.0.0",
     "ajv": "^8.12.0",
     "ajv-formats": "^2.1.1",
-    "chokidar": "^3.5.3",
-    "uuid": "^9.0.1"
+    "chokidar": "^3.5.3"
   }
 }

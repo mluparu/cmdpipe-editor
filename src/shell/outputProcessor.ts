@@ -3,7 +3,7 @@ import { Logger } from '../utils/logger';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 
 /**
  * Result of error and warning extraction from output
@@ -73,7 +73,7 @@ export class OutputProcessor {
      */
     public async saveBinaryToTempFile(data: Buffer): Promise<string> {
         const tempDir = os.tmpdir();
-        const filename = `cmdpipe-binary-${uuidv4()}.bin`;
+        const filename = `cmdpipe-binary-${randomUUID()}.bin`;
         const tempFilePath = path.join(tempDir, filename);
 
         try {
