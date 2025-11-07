@@ -7,6 +7,16 @@
 
 import type { ThemeIcon, Uri } from "vscode";
 
+/** Metadata describing the workspace folder that owns a task definition. */
+export interface TaskWorkspaceFolderMetadata {
+    /** Workspace folder URI. */
+    uri: Uri;
+    /** Absolute file system path for the workspace folder. */
+    fsPath: string;
+    /** Display name for the workspace folder. */
+    name: string;
+}
+
 export type IconPath = Uri | { light: Uri; dark: Uri } | ThemeIcon;
 
 /**
@@ -73,6 +83,9 @@ export interface TaskDefinition {
     
     /** Output target for cmdpipe integration */
     outputTarget?: OutputTarget;
+
+    /** Owning workspace folder metadata (populated during discovery). */
+    workspaceFolder?: TaskWorkspaceFolderMetadata;
 }
 
 /**

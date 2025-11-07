@@ -10,6 +10,7 @@ A VSCode extension that allows you to run arbitrary shell tasks and pipe their o
 - **Task Management**: Reuse tasks defined in .vscode/tasks.json
 - **Cross-Platform**: Works on Windows, macOS, and Linux
 - **Output Processing**: Format and filter command output
+- **Variable Substitution**: Resolve `${workspace*}`, `${env:*}`, and `${config:*}` placeholders with redacted logging
 - **Progress Tracking**: Visual feedback for running commands
 - **Notifications**: User-friendly feedback system
 
@@ -119,6 +120,30 @@ The extension provides several commands to manage and configure its behavior:
 - `cmdpipe.config.validateTaskConfigs`: Validates all task configurations and reports any issues.
 
 To learn more about configuring the extension, see the [Configuration](docs/index.md#configuration) section in the documentation.
+
+## Variable Substitution
+
+CmdPipe resolves VS Code style placeholders before a task executes, so configuration stays portable across machines and workspaces.
+
+- Workspace tokens: `${workspaceFolder}`, `${workspaceFolder:<name>}`, `${workspaceFolderBasename}`, `${relativeFile}`, `${file}`, `${fileDirname}`, `${fileBasename}`, `${fileBasenameNoExtension}`, `${fileExtname}`
+- Environment tokens: `${env:VAR_NAME}` merge `process.env`, workspace defaults, and task-level overrides; missing values block execution and resolved values are redacted in logs.
+- Configuration tokens: `${config:cmdpipe.shell.defaultWorkingDirectory}` (and other settings) honor VS Code scope precedence and require string-like values.
+
+Example task definition:
+
+```json
+{
+    "id": "publish-docs",
+    "command": "${workspaceFolder}/scripts/publish.sh",
+    "args": ["--target", "${config:cmdpipe.deploy.channel}"],
+    "workingDirectory": "${workspaceFolder}",
+    "environmentVariables": {
+        "API_TOKEN": "${env:API_TOKEN}"
+    }
+}
+```
+
+Use `CmdPipe Config: Show Logs` to review substitution summaries when troubleshooting placeholder failures or redacted values.
 
 ## License
 

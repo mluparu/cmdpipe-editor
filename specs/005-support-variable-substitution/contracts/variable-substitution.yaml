@@ -1,0 +1,249 @@
+openapi: 3.0.3
+info:
+  title: Cmdpipe Variable Substitution Service
+  version: 1.0.0
+  description: >-
+    Internal contract describing how cmdpipe modules request placeholder resolution
+    before delegating to ShellExecutor. Modeled as an HTTP-like API for clarity; the
+    actual implementation is an in-memory service.
+servers:
+  - url: internal://substitution
+paths:
+  /resolve:
+    post:
+      summary: Resolve VS Code-style placeholders for a task execution payload
+      operationId: resolveVariables
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubstitutionRequest'
+      responses:
+        '200':
+          description: Substitution succeeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubstitutionResult'
+        '400':
+          description: Request validation failed (malformed payload)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '409':
+          description: Placeholder could not be resolved (e.g., missing env/config)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubstitutionFailure'
+components:
+  schemas:
+    SubstitutionRequest:
+      type: object
+      required:
+        - taskId
+        - command
+        - args
+        - context
+      properties:
+        taskId:
+          type: string
+          description: Stable id generated for the task execution.
+        command:
+          type: string
+          description: Raw command string including unresolved placeholders.
+        args:
+          type: array
+          description: Command arguments prior to substitution.
+          items:
+            type: string
+        workingDirectory:
+          type: string
+          description: Optional working directory containing placeholders.
+        environmentVariables:
+          type: object
+          additionalProperties:
+            type: string
+          description: Task-defined environment overrides (may contain placeholders).
+        context:
+          $ref: '#/components/schemas/VariableContextSnapshot'
+    VariableContextSnapshot:
+      type: object
+      description: Runtime data required to resolve placeholders.
+      properties:
+        workspaceFolder:
+          $ref: '#/components/schemas/WorkspaceFolderDescriptor'
+        activeFile:
+          $ref: '#/components/schemas/ActiveFileDescriptor'
+        env:
+          type: object
+          description: Merged environment map (process ➝ workspace defaults ➝ task overrides).
+          additionalProperties:
+            type: string
+        config:
+          type: object
+          description: Configuration values keyed by fully qualified setting names.
+          additionalProperties: {}
+        timestamp:
+          type: integer
+          format: int64
+          description: Epoch milliseconds when context generated.
+    WorkspaceFolderDescriptor:
+      type: object
+      required:
+        - uri
+        - name
+        - fsPath
+      properties:
+        uri:
+          type: string
+          format: uri
+        name:
+          type: string
+        fsPath:
+          type: string
+    ActiveFileDescriptor:
+      type: object
+      properties:
+        uri:
+          type: string
+          format: uri
+        fsPath:
+          type: string
+        relativePath:
+          type: string
+        selection:
+          $ref: '#/components/schemas/EditorSelection'
+    EditorSelection:
+      type: object
+      required:
+        - start
+        - end
+        - text
+      properties:
+        start:
+          $ref: '#/components/schemas/Position'
+        end:
+          $ref: '#/components/schemas/Position'
+        text:
+          type: string
+    Position:
+      type: object
+      required:
+        - line
+        - character
+      properties:
+        line:
+          type: integer
+          minimum: 0
+        character:
+          type: integer
+          minimum: 0
+    SubstitutionResult:
+      type: object
+      required:
+        - command
+        - args
+        - placeholders
+      properties:
+        command:
+          type: string
+          description: Command after substitution.
+        args:
+          type: array
+          items:
+            type: string
+        workingDirectory:
+          type: string
+        environmentVariables:
+          type: object
+          additionalProperties:
+            type: string
+        placeholders:
+          type: array
+          items:
+            $ref: '#/components/schemas/PlaceholderResolution'
+        warnings:
+          type: array
+          items:
+            type: string
+        summary:
+          $ref: '#/components/schemas/SubstitutionSummary'
+    PlaceholderResolution:
+      type: object
+      required:
+        - token
+        - category
+        - status
+      properties:
+        token:
+          type: string
+        resolvedValue:
+          type: string
+          description: Present when substitution succeeded and value is safe to log.
+        redactedValue:
+          type: string
+          description: Present when value is sensitive; typical literal '[REDACTED]'.
+        category:
+          type: string
+          enum: [workspace, file, env, config, custom, unsupported]
+        status:
+          type: string
+          enum: [resolved, missing, unsupported]
+        message:
+          type: string
+          description: Additional details for missing/unsupported statuses.
+    SubstitutionSummary:
+      type: object
+      required:
+        - tokens
+      properties:
+        tokens:
+          type: array
+          description: Ordered list of tokens encountered during substitution.
+          items:
+            type: object
+            required:
+              - token
+              - displayValue
+            properties:
+              token:
+                type: string
+              displayValue:
+                type: string
+              category:
+                type: string
+        executionTimeMs:
+          type: integer
+          format: int64
+          description: Elapsed time spent resolving placeholders.
+    ValidationError:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+          additionalProperties: {}
+    SubstitutionFailure:
+      type: object
+      required:
+        - token
+        - reason
+      properties:
+        token:
+          type: string
+        reason:
+          type: string
+          enum: [missing-environment, missing-config, missing-file, unsupported-placeholder, invalid-command-output]
+        message:
+          type: string
+        suggestion:
+          type: string

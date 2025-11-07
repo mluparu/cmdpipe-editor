@@ -1,10 +1,17 @@
 import { spawn, ChildProcess } from 'child_process';
+
+import { VariableContextBuilder } from '../substitution/contextBuilder';
+import { SubstitutionError, VariableResolver } from '../substitution/variableResolver';
+import { withSubstitutionSummary } from '../substitution/substitutionSummary';
+import type { SubstitutionFailure, SubstitutionRequest, SubstitutionResult } from '../substitution/substitutionTypes';
+import { SubstitutionFailureReason } from '../substitution/substitutionTypes';
 import { TaskDefinition, TaskExecutionResult } from '../types/taskTypes';
-import { PlatformDetector } from './platformDetector';
 import { createScopedLogger } from '../utils/logger';
-import { ShellTaskPipeError, TaskExecutionError, TimeoutError, ErrorType } from '../utils/errorHandler';
+import { errorHandler, ShellTaskPipeError, TaskExecutionError, TimeoutError, ErrorType } from '../utils/errorHandler';
+import { PlatformDetector } from './platformDetector';
 
 const logger = createScopedLogger('ShellExecutor');
+const CONFIG_PLACEHOLDER_PATTERN = /\$\{config:([^}]+)\}/g;
 
 /**
  * Handles execution of shell commands across different platforms
@@ -13,9 +20,13 @@ export class ShellExecutor {
     private static _instance: ShellExecutor;
     private _platformDetector: PlatformDetector;
     private _runningTasks: Map<string, ChildProcess> = new Map();
+    private readonly contextBuilder: VariableContextBuilder;
+    private readonly variableResolver: VariableResolver;
 
     private constructor() {
         this._platformDetector = PlatformDetector.getInstance();
+        this.contextBuilder = new VariableContextBuilder();
+        this.variableResolver = new VariableResolver();
     }
 
     public static getInstance(): ShellExecutor {
@@ -58,7 +69,7 @@ export class ShellExecutor {
             }
 
             // Prepare command execution with custom options
-            const { command, args, options: execOptions } = this.prepareExecution(task);
+            const { command, args, options: execOptions } = await this.prepareExecution(task);
             
             // // Override with provided options
             // if (options?.workingDirectory) {
@@ -255,17 +266,17 @@ export class ShellExecutor {
     /**
      * Prepare command execution parameters
      */
-    private prepareExecution(task: TaskDefinition): {
+    private async prepareExecution(task: TaskDefinition): Promise<{
         command: string;
         args: string[];
         options: any;
-    } {
+    }> {
+        const substitution = await this.runSubstitution(task);
         const platformInfo = this._platformDetector.getPlatformInfo();
-        
-        // Determine shell and command
+
         let shell: string;
         let shellArgs: string[];
-        
+
         if (task.shell) {
             shell = task.shell.executable || platformInfo.defaultShell;
             shellArgs = task.shell.args || platformInfo.shellArgs;
@@ -274,21 +285,18 @@ export class ShellExecutor {
             shellArgs = platformInfo.shellArgs;
         }
 
-        // Build command arguments
-        const commandLine = [task.command, ...(task.args || [])].join(' ');
+        const commandLine = [substitution.command, ...substitution.args].join(' ').trim();
         const args = [...shellArgs, commandLine];
 
-        // Prepare environment variables
         const env = {
             ...process.env,
-            ...task.environmentVariables
+            ...(substitution.environmentVariables ?? {})
         };
 
-        // Set working directory
-        const cwd = task.workingDirectory || process.cwd();
+        const cwd = substitution.workingDirectory || task.workingDirectory || process.cwd();
 
         const options = {
-            shell: false, // We're handling shell manually
+            shell: false,
             cwd,
             env,
             stdio: ['pipe', 'pipe', 'pipe'] as const,
@@ -298,6 +306,117 @@ export class ShellExecutor {
         logger.debug(`Prepared execution - Shell: ${shell}, Args: ${JSON.stringify(args)}, CWD: ${cwd}`);
 
         return { command: shell, args, options };
+    }
+
+    private async runSubstitution(task: TaskDefinition): Promise<SubstitutionResult> {
+        const start = Date.now();
+        const configKeys = this.extractConfigKeys(task);
+        const context = await this.contextBuilder.build(task, configKeys);
+        const request: SubstitutionRequest = {
+            taskId: task.id,
+            command: task.command,
+            args: task.args ?? [],
+            workingDirectory: task.workingDirectory,
+            environmentVariables: task.environmentVariables,
+            additionalFields: undefined,
+            context
+        };
+
+        try {
+            const resolved = await this.variableResolver.resolve(request);
+            const withSummary = withSubstitutionSummary(resolved, { executionTimeMs: Date.now() - start });
+
+            if (withSummary.summary) {
+                logger.debug(`Substitution summary for task ${task.id}`, withSummary.summary);
+            }
+
+            return withSummary;
+        } catch (error) {
+            if (error instanceof SubstitutionError) {
+                throw this.handleSubstitutionFailure(task, error);
+            }
+
+            throw error;
+        }
+    }
+
+    private handleSubstitutionFailure(task: TaskDefinition, error: SubstitutionError): Error {
+        if (error.failure.reason === SubstitutionFailureReason.MISSING_ENVIRONMENT) {
+            const variableName = this.extractEnvironmentVariableName(error.failure);
+            return errorHandler.createMissingEnvironmentVariableError(variableName, {
+                token: error.failure.token,
+                taskId: task.id
+            });
+        }
+
+        if (error.failure.reason === SubstitutionFailureReason.MISSING_CONFIG) {
+            const setting = this.extractConfigurationSettingName(error.failure);
+            return errorHandler.createMissingConfigurationSettingError(setting, {
+                token: error.failure.token,
+                taskId: task.id
+            });
+        }
+
+        return error;
+    }
+
+    private extractEnvironmentVariableName(failure: SubstitutionFailure): string {
+        const detailsName = typeof failure.details?.variable === "string" ? failure.details.variable : undefined;
+        if (detailsName) {
+            return detailsName;
+        }
+
+        const match = /^\$\{env:([^}]+)\}$/i.exec(failure.token);
+        if (match?.[1]) {
+            return match[1];
+        }
+
+        return failure.token;
+    }
+
+    private extractConfigurationSettingName(failure: SubstitutionFailure): string {
+        const detailsSetting = typeof failure.details?.setting === "string" ? failure.details.setting : undefined;
+        if (detailsSetting) {
+            return detailsSetting;
+        }
+
+        const match = /^\$\{config:([^}]+)\}$/i.exec(failure.token);
+        if (match?.[1]) {
+            return match[1];
+        }
+
+        return failure.token;
+    }
+
+    private extractConfigKeys(task: TaskDefinition): string[] {
+        const keys = new Set<string>();
+
+        const collectFromString = (value?: string) => {
+            if (!value) {
+                return;
+            }
+
+            CONFIG_PLACEHOLDER_PATTERN.lastIndex = 0;
+            let match: RegExpExecArray | null;
+            while ((match = CONFIG_PLACEHOLDER_PATTERN.exec(value)) !== null) {
+                const key = match[1]?.trim();
+                if (key) {
+                    keys.add(key);
+                }
+            }
+        };
+
+        collectFromString(task.command);
+        (task.args ?? []).forEach((arg) => collectFromString(arg));
+        collectFromString(task.workingDirectory);
+
+        if (task.environmentVariables) {
+            Object.values(task.environmentVariables).forEach((value) => collectFromString(value));
+        }
+
+        CONFIG_PLACEHOLDER_PATTERN.lastIndex = 0;
+
+        return Array.from(keys);
     }
 
     // /**

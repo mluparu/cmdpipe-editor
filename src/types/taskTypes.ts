@@ -1,9 +1,14 @@
 // Type definitions for shell task configurations and execution
 
-import { TaskSource, ValidationError } from './configTypes';
+import { TaskSource, type TaskWorkspaceFolderMetadata } from './configTypes';
 
 export type TaskCategory = 'file-system' | 'utility' | 'system' | 'development' | 'network' | 'custom';
 // export type OutputFormat = 'raw' | 'json' | 'xml' | 'csv' | 'formatted';
+
+export interface TaskExecutionDefaults {
+    /** Workspace-level environment defaults applied before task overrides. */
+    env?: Record<string, string>;
+}
 
 export interface TaskDefinition {
     /** Unique identifier for the task */
@@ -68,6 +73,15 @@ export interface TaskDefinition {
     
     /** Whether to show command execution in terminal (optional) */
     showInTerminal?: boolean;
+
+    /** Absolute path to the configuration file that produced this task. */
+    configurationFile?: string;
+
+    /** Metadata describing the owning workspace folder (if applicable). */
+    workspaceFolder?: TaskWorkspaceFolderMetadata;
+
+    /** Workspace-level defaults merged into execution context. */
+    workspaceDefaults?: TaskExecutionDefaults;
 }
 
 export interface TaskConfiguration {

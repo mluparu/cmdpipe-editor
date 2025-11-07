@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { SubstitutionFailureReason } from '../substitution/substitutionTypes';
 import { ILogger, createScopedLogger } from './logger';
 
 /**
@@ -416,6 +417,40 @@ export class ErrorHandler {
             throw new ShellTaskPipeError(message, type);
         }
     }
+
+    public createMissingEnvironmentVariableError(
+        variableName: string,
+        details?: Record<string, unknown>
+    ): TaskExecutionError {
+        return new TaskExecutionError(
+            `Environment variable '${variableName}' is not defined`,
+            undefined,
+            undefined,
+            undefined,
+            {
+                variableName,
+                reason: SubstitutionFailureReason.MISSING_ENVIRONMENT,
+                ...details
+            }
+        );
+    }
+
+    public createMissingConfigurationSettingError(
+        settingKey: string,
+        details?: Record<string, unknown>
+    ): TaskExecutionError {
+        return new TaskExecutionError(
+            `Configuration setting '${settingKey}' is not defined`,
+            undefined,
+            undefined,
+            undefined,
+            {
+                settingKey,
+                reason: SubstitutionFailureReason.MISSING_CONFIG,
+                ...details
+            }
+        );
+    }
 }
 
 /**
@@ -441,5 +476,11 @@ export const errorHandler = {
         ErrorHandler.getInstance().createError(error, defaultMessage, type),
     
     assert: (condition: boolean, message: string, type?: ErrorType) =>
-        ErrorHandler.getInstance().assert(condition, message, type)
+        ErrorHandler.getInstance().assert(condition, message, type),
+
+    createMissingEnvironmentVariableError: (variableName: string, details?: Record<string, unknown>) =>
+        ErrorHandler.getInstance().createMissingEnvironmentVariableError(variableName, details),
+
+    createMissingConfigurationSettingError: (settingKey: string, details?: Record<string, unknown>) =>
+        ErrorHandler.getInstance().createMissingConfigurationSettingError(settingKey, details)
 };

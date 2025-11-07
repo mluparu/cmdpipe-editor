@@ -9,7 +9,6 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as os from 'os';
 import * as fs from 'fs';
-import { v4 as uuidv4 } from 'uuid';
 import { Logger } from './logger';
 
 /**

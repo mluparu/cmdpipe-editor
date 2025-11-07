@@ -1,3 +1,5 @@
+import * as vscode from 'vscode';
+
 import { TaskConfiguration, TaskDefinition, TaskSource } from '../types/configTypes';
 import { Logger } from '../utils/logger';
 
@@ -56,12 +58,12 @@ export class TaskResolver {
             for (const [taskName, tasks] of tasksByName.entries()) {
                 if (tasks.length === 1) {
                     // No conflict, add the single task
-                    resolvedTasks.push(tasks[0]);
+                    resolvedTasks.push(this.attachWorkspaceMetadata(tasks[0]));
                 } else {
                     // Conflict exists, apply resolution rules
                     const resolvedTask = this.resolveTaskConflict(taskName, tasks);
                     if (resolvedTask) {
-                        resolvedTasks.push(resolvedTask);
+                        resolvedTasks.push(this.attachWorkspaceMetadata(resolvedTask));
                     }
                 }
             }
@@ -157,6 +159,56 @@ export class TaskResolver {
         // Fallback to first task (shouldn't happen with current sources)
         this.logger.warn(`Unexpected conflict resolution for '${taskName}': using first available task`);
         return tasks[0];
+    }
+
+    private attachWorkspaceMetadata(task: TaskDefinition): TaskDefinition {
+        if (task.workspaceFolder) {
+            return task;
+        }
+
+        const workspaceFolder = this.findOwningWorkspace(task.filePath);
+        if (!workspaceFolder) {
+            return task;
+        }
+
+        return {
+            ...task,
+            workspaceFolder: {
+                name: workspaceFolder.name,
+                fsPath: workspaceFolder.uri.fsPath,
+                uri: workspaceFolder.uri
+            }
+        };
+    }
+
+    private findOwningWorkspace(filePath?: string): vscode.WorkspaceFolder | undefined {
+        if (!filePath) {
+            return undefined;
+        }
+
+        try {
+            const uri = vscode.Uri.file(filePath);
+            const folder = vscode.workspace.getWorkspaceFolder(uri);
+
+            if (folder) {
+                return folder;
+            }
+        } catch (error) {
+            this.logger.debug(`Unable to determine workspace for ${filePath}: ${error}`);
+        }
+
+        const folders = vscode.workspace.workspaceFolders;
+        if (!folders || folders.length === 0) {
+            return undefined;
+        }
+
+        const targetPath = this.normalisePath(filePath);
+        return folders.find((folder) => targetPath.startsWith(this.normalisePath(folder.uri.fsPath)));
+    }
+
+    private normalisePath(value: string): string {
+        const resolved = value.replace(/\\/g, '/');
+        return process.platform === 'win32' ? resolved.toLowerCase() : resolved;
     }
 
     /**

@@ -49,6 +49,30 @@ Tasks are defined in `.vscode/tasks.json`. Example:
 * `args`: Command arguments (optional)
 * `options`: Task execution options (see below)
 
+## Variable Substitution
+
+CmdPipe resolves VS Code style placeholders before a task runs so commands, arguments, working directories, and environment variables stay portable.
+
+- Workspace placeholders: use `${workspaceFolder}`, `${workspaceFolder:<name>}`, `${workspaceFolderBasename}`, `${relativeFile}`, `${file}`, `${fileDirname}`, `${fileBasename}`, `${fileBasenameNoExtension}`, `${fileExtname}` to scope tasks to the current folder or active file.
+- Environment placeholders: `${env:VAR_NAME}` merges `process.env`, workspace defaults, and task-level overrides. Missing variables block execution with a descriptive error and the logs redact resolved values.
+- Configuration placeholders: `${config:cmdpipe.shell.defaultWorkingDirectory}` (and other settings) honor VS Code scope precedence. Non-string values surface validation failures.
+
+Example task snippet:
+
+```json
+{
+   "id": "build-with-context",
+   "command": "${workspaceFolder}/scripts/build.sh",
+   "args": ["--config", "${config:cmdpipe.build.profile}"],
+   "workingDirectory": "${workspaceFolder}",
+   "environmentVariables": {
+      "API_TOKEN": "${env:API_TOKEN}"
+   }
+}
+```
+
+View substitution outcomes in the CmdPipe logs (`CmdPipe Config: Show Logs`) for troubleshooting redacted values and failure reasons.
+
 ### VSCode Settings
 
 Configure the extension in VSCode settings (`settings.json`):

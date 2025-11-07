@@ -839,7 +839,9 @@ export class CommandHandler implements vscode.Disposable {
             outputProcessing: {
                 trimWhitespace: true,
                 maxOutputLength: 10000
-            }
+            },
+            configurationFile: configTask.filePath,
+            workspaceFolder: configTask.workspaceFolder
         };
     }
 
