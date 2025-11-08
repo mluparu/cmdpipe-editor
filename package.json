@@ -2,7 +2,7 @@
   "name": "cmd-pipe",
   "displayName": "Command/Task Pipe",
   "description": "Run shell tasks defined in tasks.json and pipe their outputs directly into the editor at cursor position",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "publisher": "MarianLuparuMSFT",
   "repository": {
     "type": "git",
