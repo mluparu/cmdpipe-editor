@@ -75,6 +75,7 @@ export class PlatformDetector {
     public escapeArgument(arg: string): string {
         if (this.isWindows()) {
             // Windows cmd.exe escaping
+            // TODO: Handle escaping for PowerShell if needed
             if (arg.includes(' ') || arg.includes('"') || arg.includes('&') || arg.includes('<') || arg.includes('>') || arg.includes('|')) {
                 return `"${arg.replace(/"/g, '""')}"`;
             }
@@ -104,6 +105,7 @@ export class PlatformDetector {
         
         switch (platform) {
             case 'win32':
+                // TODO: Consider detecting PowerShell as default shell if available: powershell.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "& { <resolved command + args> }"
                 return {
                     platform: 'win32',
                     defaultShell: process.env.COMSPEC || 'cmd.exe',

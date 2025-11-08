@@ -9,7 +9,7 @@ import { TaskDefinition, TaskExecutionResult } from '../types/taskTypes';
 import { CommandRegistry, CommandRegistration, CommandMetadata, OutputInsertionContext } from '../types/extensionTypes';
 import { TrustGuard, TrustViolationError } from '../discovery/trustGuard';
 import { Logger } from '../utils/logger';
-import { ErrorHandler } from '../utils/errorHandler';
+import { ErrorHandler, TaskExecutionError } from '../utils/errorHandler';
 import { ISecurityWarningPresenter, SecurityWarningPresenter, WarningActionResult } from '../ui/trustWarningPresenter';
 import { WarningMessageModel, TrustContext, TrustState } from '../types/trustTypes';
 import { TrustAwareTaskService } from '../config/trustAwareTaskService';
@@ -988,7 +988,7 @@ export class CommandHandler implements vscode.Disposable {
                 }
 
                 if (!result.success) {
-                    throw new Error(result.error || 'Task execution failed');
+                    throw new TaskExecutionError(result.error || 'Task execution failed', result.exitCode, result.output?.toString('utf8'), result.stderr?.toString('utf8'));
                 }
 
                 // Process output for binary content

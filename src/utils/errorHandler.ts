@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { SubstitutionFailureReason } from '../substitution/substitutionTypes';
 import { ILogger, createScopedLogger } from './logger';
+import util from 'util';
 
 /**
  * Error types for the extension
@@ -299,6 +300,21 @@ export class ErrorHandler {
     ): void {
         const contextInfo = context ? ` in ${context}` : '';
         this._logger.error(`Error occurred${contextInfo}`, error);
+        
+        var errorDetails;
+        if (error instanceof ShellTaskPipeError)
+            errorDetails = error.getDetailedInfo();
+        else
+            errorDetails = { message: error.message, stack: error.stack };
+
+        // Use util.inspect for better formatting of objects with unescaped newlines and paths
+        // This avoids JSON.stringify's escaping of \n and \\ in strings
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const inspected = util.inspect(errorDetails, { depth: 6, colors: false, breakLength: 120 });
+        this._logger.debug('Error details:');
+        for (const line of inspected.split('\n')) {
+            this._logger.debug(line);
+        }
 
         if (showToUser) {
             this.showErrorToUser(error, suggestedAction);
