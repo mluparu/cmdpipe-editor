@@ -285,8 +285,9 @@ export class ShellExecutor {
             shellArgs = platformInfo.shellArgs;
         }
 
-        const commandLine = [substitution.command, ...substitution.args];
-        const args = [...shellArgs, ...commandLine];
+    const commandLine = [substitution.command, ...(substitution.args ?? [])];
+    const escapedCommandLine = commandLine.map((value) => this._platformDetector.escapeArgument(value));
+    const args = [...shellArgs, ...escapedCommandLine];
 
         const env = {
             ...process.env,

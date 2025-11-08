@@ -1,0 +1,126 @@
+openapi: 3.0.3
+info:
+  title: Shell Detection Service Contract
+  version: 0.1.0
+  description: |
+    Internal contract describing how platform information and shell-specific argument escaping
+    are exposed to the rest of the cmdpipe editor extension.
+servers:
+  - url: vscode-extension://local
+paths:
+  /platform-info:
+    get:
+      summary: Retrieve the resolved platform profile
+      description: Returns the current operating system and default shell metadata used for task execution.
+      responses:
+        '200':
+          description: Platform profile successfully resolved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformProfile'
+        '503':
+          description: Platform information temporarily unavailable (e.g., detection failure)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetectionError'
+  /commands/escape:
+    post:
+      summary: Escape command arguments for the active shell
+      description: Accepts a command and arguments, returning the escaped representation for the detected shell.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EscapeRequest'
+      responses:
+        '200':
+          description: Escaped arguments ready for execution
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EscapeResponse'
+        '400':
+          description: Request validation error (missing command or arguments)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+components:
+  schemas:
+    PlatformProfile:
+      type: object
+      required: [platform, defaultShell, shellPath, shellArgs, pathSeparator, pathEnvVar]
+      properties:
+        platform:
+          type: string
+          enum: [win32, darwin, linux]
+        defaultShell:
+          type: string
+          description: Canonical identifier of the chosen shell (e.g., powershell.exe, pwsh.exe, cmd.exe)
+        shellPath:
+          type: string
+          description: Absolute path to the executable invoked for task execution
+        shellArgs:
+          type: array
+          items:
+            type: string
+        pathSeparator:
+          type: string
+        pathEnvVar:
+          type: string
+        diagnostics:
+          type: array
+          items:
+            type: string
+          description: Optional list of warnings produced during detection
+    EscapeRequest:
+      type: object
+      required: [command]
+      properties:
+        command:
+          type: string
+          description: Executable or script that will be launched
+        args:
+          type: array
+          items:
+            type: string
+          description: Raw argument list; may be empty
+    EscapeResponse:
+      type: object
+      required: [command, escapedArgs, shell]
+      properties:
+        command:
+          type: string
+        escapedArgs:
+          type: array
+          items:
+            type: string
+          description: |
+            Shell-specific argument escaping. On Windows with PowerShell defaults the
+            service wraps literal arguments in single quotes, doubles embedded
+            single quotes, and promotes literals to double quotes only when whitespace
+            must coexist with variable expansion or trailing backslashes. PowerShell
+            double quotes double embedded double quotes and preserve escaped
+            backticks so diagnostics can reconstruct the original payload.
+        shell:
+          $ref: '#/components/schemas/PlatformProfile'
+    DetectionError:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+        fallbackShell:
+          type: string
+          description: Shell selected as fallback when preferred shell unavailable
+    ValidationError:
+      type: object
+      required: [message, field]
+      properties:
+        message:
+          type: string
+        field:
+          type: string

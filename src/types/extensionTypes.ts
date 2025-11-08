@@ -143,6 +143,15 @@ export interface PlatformInfo {
     
     /** Environment variable name for PATH */
     pathEnvVar: string;
+
+    /** VS Code terminal profile identifier when detection originates from profiles */
+    profileId?: string;
+
+    /** Optional VS Code profile source metadata (e.g., PowerShell, Command Prompt) */
+    profileSource?: string;
+
+    /** Diagnostics collected while resolving the platform */
+    diagnostics?: string[];
 }
 
 // export interface ErrorInfo {

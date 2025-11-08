@@ -16,13 +16,61 @@ export const window = {
 
 const trustListeners: Array<() => void> = [];
 
+type ConfigurationSectionStore = Record<string, any>;
+const ROOT_CONFIGURATION_SECTION = '__root__';
+const configurationStore: Record<string, ConfigurationSectionStore> = {};
+
+const getSectionKey = (section?: string): string => section ?? ROOT_CONFIGURATION_SECTION;
+
+const ensureSectionStore = (section?: string): ConfigurationSectionStore => {
+    const key = getSectionKey(section);
+    if (!configurationStore[key]) {
+        configurationStore[key] = {};
+    }
+    return configurationStore[key];
+};
+
+const getConfigurationValue = (section: string | undefined, key: string): any => {
+    const store = ensureSectionStore(section);
+    return store[key];
+};
+
+const setConfigurationValue = (section: string | undefined, key: string, value: unknown): void => {
+    const store = ensureSectionStore(section);
+    store[key] = value;
+};
+
+const hasConfigurationValue = (section: string | undefined, key: string): boolean => {
+    const store = ensureSectionStore(section);
+    return Object.prototype.hasOwnProperty.call(store, key);
+};
+
+const resetConfigurationStore = (): void => {
+    Object.keys(configurationStore).forEach((key) => delete configurationStore[key]);
+    setConfigurationValue('terminal.integrated', 'profiles.windows', {});
+    setConfigurationValue('terminal.integrated', 'defaultProfile.windows', null);
+};
+
+const createConfiguration = (section?: string) => ({
+    get: <T>(key: string, defaultValue?: T): T | undefined => {
+        const value = getConfigurationValue(section, key);
+        return (value === undefined ? defaultValue : value) as T | undefined;
+    },
+    update: (key: string, value: unknown) => {
+        setConfigurationValue(section, key, value);
+        return Promise.resolve();
+    },
+    has: (key: string) => hasConfigurationValue(section, key)
+});
+
+resetConfigurationStore();
+
+const defaultGetConfiguration = (section?: string) => createConfiguration(section);
+const getConfigurationMock = jest.fn(defaultGetConfiguration);
+
 export const workspace = {
     workspaceFolders: undefined,
-    getConfiguration: jest.fn().mockReturnValue({
-        get: jest.fn(),
-        update: jest.fn(),
-        has: jest.fn()
-    }),
+    getConfiguration: getConfigurationMock,
     onDidChangeConfiguration: jest.fn(),
     fs: {
         stat: jest.fn(),
@@ -54,6 +102,24 @@ export const workspace = {
     __resetTrustMock: () => {
         workspace.isTrusted = true;
         trustListeners.splice(0, trustListeners.length);
+    },
+    __setConfigurationValue: (section: string, key: string, value: unknown) => {
+        setConfigurationValue(section, key, value);
+    },
+    __setConfigurationSection: (section: string, values: Record<string, unknown>) => {
+        Object.entries(values).forEach(([key, value]) => setConfigurationValue(section, key, value));
+    },
+    __getConfigurationValue: (section: string, key: string) => getConfigurationValue(section, key),
+    __setTerminalDefaultProfile: (profileId?: string | null) => {
+        setConfigurationValue('terminal.integrated', 'defaultProfile.windows', profileId ?? null);
+    },
+    __setTerminalProfiles: (profiles: Record<string, unknown>) => {
+        setConfigurationValue('terminal.integrated', 'profiles.windows', profiles);
+    },
+    __resetConfiguration: () => {
+        getConfigurationMock.mockReset();
+        resetConfigurationStore();
+        getConfigurationMock.mockImplementation(defaultGetConfiguration);
     }
 };
 

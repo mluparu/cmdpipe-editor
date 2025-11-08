@@ -362,6 +362,67 @@ test-workspace/
 - ✅ No extension conflicts
 - ✅ Stable operation
 
+### 11. Windows PowerShell Default Detection
+
+#### Test 11.1: Default Profile - Windows PowerShell
+**Objective**: Confirm the extension honors the VS Code PowerShell default profile
+
+**Prerequisites**: `terminal.integrated.defaultProfile.windows` set to `PowerShell`
+
+**Steps**:
+1. Reload the VS Code window to apply the profile change.
+2. Open the `CmdPipe: Run Task in Editor` output channel via `CmdPipe Config: Show Logs`.
+3. Run the sample "Windows PowerShell Echo" task from the test workspace.
+4. **Expected**: The log captures the resolved profile name, `powershell.exe` launch path, and PowerShell-specific arguments.
+
+**Success Criteria**:
+- ✅ Task output banner shows PowerShell
+- ✅ CmdPipe log entry includes `powershell.exe`
+- ✅ No fallback warnings recorded
+
+#### Test 11.2: Default Profile - PowerShell Core (pwsh)
+**Objective**: Validate detection when VS Code defaults to PowerShell Core
+
+**Prerequisites**: `terminal.integrated.defaultProfile.windows` set to `PowerShell Core`
+
+**Steps**:
+1. Reload the VS Code window.
+2. Reopen the CmdPipe output channel to capture fresh diagnostics.
+3. Execute the sample PowerShell task and note the shell banner.
+4. **Expected**: The log records the `pwsh.exe` path and arguments (for example `-NoLogo -NoProfile -Command`).
+
+**Success Criteria**:
+- ✅ Task output reflects PowerShell Core
+- ✅ CmdPipe log entry includes `pwsh.exe`
+- ✅ Diagnostics array remains empty
+
+#### Test 11.3: PowerShell Argument Escaping
+**Objective**: Ensure PowerShell receives escaped arguments without mutation
+
+**Steps**:
+1. Edit the sample task to use arguments containing spaces, double quotes, single quotes, and `&` symbols (e.g., `Write-Host "C:\Program Files" "foo'bar" '&signal'`).
+2. Run the task under the current PowerShell default profile.
+3. Inspect the task output and CmdPipe log to verify single quotes are doubled and literals remain intact.
+
+**Success Criteria**:
+- ✅ Output exactly matches the provided literals
+- ✅ CmdPipe log shows the escaped payload with doubled single quotes
+- ✅ No PowerShell parsing errors raised
+
+#### Test 11.4: Fallback to Command Prompt
+**Objective**: Verify diagnostics and fallback behavior when the PowerShell profile cannot resolve
+
+**Steps**:
+1. Set `terminal.integrated.defaultProfile.windows` to an invalid name (e.g., `Bogus-PowerShell`).
+2. Reload VS Code and rerun the sample task.
+3. Review the CmdPipe output channel.
+4. **Expected**: The log records a warning, explains the PowerShell resolution failure, and notes that `cmd.exe` with `/c` arguments was selected.
+
+**Success Criteria**:
+- ✅ Task still executes using Command Prompt
+- ✅ Warning diagnostic captured with the failure reason
+- ✅ Restoring a valid profile removes the warning on the next run
+
 ## Test Results Template
 
 ### Test Session Information

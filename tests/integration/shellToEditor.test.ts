@@ -1,21 +1,44 @@
+import * as os from 'os';
+import * as fs from 'fs';
+import * as path from 'path';
 import { ShellExecutor } from '../../src/shell/shellExecutor';
 import { CursorManager } from '../../src/editor/cursorManager';
 import { TextInsertion } from '../../src/editor/textInsertion';
 import { TaskDefinition } from '../../src/types/taskTypes';
-import { EditorInfo } from '../../src/types/extensionTypes';
+import { PlatformDetector } from '../../src/shell/platformDetector';
+import { workspace } from 'vscode';
 
 // Import vscode for position and other types
 const vscode = require('vscode');
+
+jest.mock('os', () => {
+    const actual = jest.requireActual('os');
+    return {
+        ...actual,
+        platform: jest.fn(() => 'win32')
+    };
+});
+
+jest.mock('fs', () => {
+    const actual = jest.requireActual('fs');
+    return {
+        ...actual,
+        existsSync: jest.fn(actual.existsSync.bind(actual))
+    };
+});
 
 // Mock the dependencies
 jest.mock('../../src/shell/shellExecutor');
 jest.mock('../../src/editor/cursorManager');
 jest.mock('../../src/editor/textInsertion');
 
+const osPlatformMock = os.platform as unknown as jest.Mock;
+const fsExistsMock = fs.existsSync as unknown as jest.Mock;
+
 describe('Shell to Editor Integration', () => {
-    let mockShellExecutor: jest.Mocked<ShellExecutor>;
-    let mockCursorManager: jest.Mocked<CursorManager>;
-    let mockTextInsertion: jest.Mocked<TextInsertion>;
+    let mockShellExecutor: any;
+    let mockCursorManager: any;
+    let mockTextInsertion: any;
 
     beforeEach(() => {
         jest.clearAllMocks();
@@ -71,7 +94,7 @@ describe('Shell to Editor Integration', () => {
                 args: ['Hello World']
             };
 
-            const mockEditorInfo: EditorInfo = {
+            const mockEditorInfo: any = {
                 editor: {} as any,
                 cursorPosition: { line: 1, character: 5 } as any,
                 selection: { start: { line: 1, character: 5 }, end: { line: 1, character: 5 } } as any,
@@ -134,7 +157,7 @@ describe('Shell to Editor Integration', () => {
                 command: 'nonexistent-command'
             };
 
-            const mockEditorInfo: EditorInfo = {
+            const mockEditorInfo: any = {
                 editor: {} as any,
                 cursorPosition: { line: 1, character: 5 } as any,
                 selection: { start: { line: 1, character: 5 }, end: { line: 1, character: 5 } } as any,
@@ -174,7 +197,7 @@ describe('Shell to Editor Integration', () => {
                 args: ['Hello World']
             };
 
-            const mockEditorInfo: EditorInfo = {
+            const mockEditorInfo: any = {
                 editor: {} as any,
                 cursorPosition: { line: 1, character: 5 } as any,
                 selection: { start: { line: 1, character: 5 }, end: { line: 1, character: 5 } } as any,
@@ -248,7 +271,7 @@ describe('Shell to Editor Integration', () => {
                 }
             };
 
-            const mockEditorInfo: EditorInfo = {
+            const mockEditorInfo: any = {
                 editor: {} as any,
                 cursorPosition: { line: 1, character: 5 } as any,
                 selection: { 
@@ -341,7 +364,7 @@ describe('Shell to Editor Integration', () => {
                 args: ['Hello World']
             };
 
-            const mockEditorInfo: EditorInfo = {
+            const mockEditorInfo: any = {
                 editor: {} as any,
                 cursorPosition: { line: 1, character: 5 } as any,
                 selection: { start: { line: 1, character: 5 }, end: { line: 1, character: 5 } } as any,
@@ -385,5 +408,69 @@ describe('Shell to Editor Integration', () => {
                 expect(insertionResult.error).toBe('Failed to insert text');
             }
         });
+    });
+});
+
+describe('Platform detection integration', () => {
+    const mockedWorkspace = workspace as unknown as {
+        __resetConfiguration: () => void;
+        __setTerminalDefaultProfile: (profileId?: string | null) => void;
+        __setTerminalProfiles: (profiles: Record<string, unknown>) => void;
+    };
+    const settingsPath = path.join(__dirname, '..', '..', 'test-workspace', '.vscode', 'settings.windows.json');
+
+    beforeEach(() => {
+        mockedWorkspace.__resetConfiguration();
+        PlatformDetector.reset();
+    osPlatformMock.mockClear();
+    osPlatformMock.mockReturnValue('win32');
+        fsExistsMock.mockReset();
+
+        const rawSettings = fs.readFileSync(settingsPath, 'utf8');
+        const settings = JSON.parse(rawSettings) as Record<string, unknown>;
+
+        mockedWorkspace.__setTerminalDefaultProfile(settings['terminal.integrated.defaultProfile.windows'] as string);
+        mockedWorkspace.__setTerminalProfiles(settings['terminal.integrated.profiles.windows'] as Record<string, unknown>);
+    });
+
+    it('prefers PowerShell executable when VS Code default profile targets PowerShell', () => {
+        const settings = JSON.parse(fs.readFileSync(settingsPath, 'utf8')) as any;
+        const powerShellProfile = settings['terminal.integrated.profiles.windows']['PowerShell'];
+
+        fsExistsMock.mockImplementation((candidate: fs.PathLike) => String(candidate) === powerShellProfile.path);
+
+        const info = PlatformDetector.getInstance().getPlatformInfo();
+
+        expect(info.defaultShell).toBe('powershell.exe');
+        expect(info.shellPath).toBe(powerShellProfile.path);
+        expect(info.shellArgs).toEqual(['-NoLogo', '-NoProfile', '-Command']);
+        expect(info.profileId).toBe('PowerShell');
+        expect(info.diagnostics).toEqual(expect.arrayContaining([
+            expect.stringContaining("Resolved PowerShell profile 'PowerShell'"),
+            expect.stringContaining("Using PowerShell executable")
+        ]));
+    });
+
+    it('falls back to Command Prompt when PowerShell executable cannot be resolved', () => {
+        fsExistsMock.mockReturnValue(false);
+
+        const info = PlatformDetector.getInstance().getPlatformInfo();
+
+        expect(info.defaultShell).toBe('cmd.exe');
+        expect(info.shellArgs).toEqual(['/c']);
+        expect(info.diagnostics).toContain('Defaulting to Command Prompt (cmd.exe).');
+    });
+
+    it('preserves arguments with reserved characters when PowerShell is active', () => {
+        const settings = JSON.parse(fs.readFileSync(settingsPath, 'utf8')) as any;
+        const powerShellProfile = settings['terminal.integrated.profiles.windows']['PowerShell'];
+
+        fsExistsMock.mockImplementation((candidate: fs.PathLike) => String(candidate) === powerShellProfile.path);
+
+        const detector = PlatformDetector.getInstance();
+
+        expect(detector.getPlatformInfo().defaultShell).toBe('powershell.exe');
+        expect(detector.escapeArgument('Hello & Goodbye')).toBe("'Hello & Goodbye'");
+        expect(detector.escapeArgument('$env:Path Override')).toBe('"$env:Path Override"');
     });
 });
